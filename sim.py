@@ -1,17 +1,17 @@
-import numpy as np
-import datetime as dt
+import seaborn as sns
 import numpy as np
 import pandas as pd
 import shap as shap
+import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise
-
-# Define the parameters
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP
 from Functions.pred import define_model
 
+# Define the changeable parameters:
+seed = 93
 pred_model = "rf"
 n_samples = 100
 n_features = 5
@@ -23,7 +23,6 @@ test_size = 0.5
 cv = 5
 scoring = "r2"
 decimal_places = 2
-seed = 93
 permutations = 10
 # -------------------------- Generate Data --------------------------
 
@@ -48,6 +47,17 @@ y_pred = np.dot(X, np.ones((X.shape[1],)))
 
 # Add noise to y_pred so that X predicts y with a given r2
 y, iters_count = add_noise(y_pred, dv_r2)
+
+# Check correlations
+X_and_y = pd.concat([pd.DataFrame(X), pd.DataFrame(y)], axis=1)
+cor = round(X_and_y.corr(method='pearson'), decimal_places)
+cor_cols = X_col_names + ["y"]
+cor.columns = cor_cols
+cor.index = cor_cols
+save_path = "Outputs/"
+cor.to_csv(save_path+"data_correlations.csv")
+ax = sns.heatmap(cor, linewidth=0.1, cmap="Oranges")
+plt.savefig(save_path + "data_cor_plot.png")
 
 # -------------------------- Train Model and Evaluate OOS --------------------------
 
