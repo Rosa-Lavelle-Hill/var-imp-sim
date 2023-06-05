@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP
 from Functions.pred import define_model
-from sklearn.inspection import PartialDependenceDisplay, plot_partial_dependence
+from sklearn.inspection import PartialDependenceDisplay
 
 # Define the changeable parameters:
 seed = 93
@@ -60,6 +60,9 @@ save_path = "Outputs/"
 cor.to_csv(save_path+"data_correlations.csv")
 ax = sns.heatmap(cor, linewidth=0.1, cmap="Oranges")
 plt.savefig(save_path + "data_cor_plot.png")
+plt.clf()
+plt.cla()
+plt.close()
 
 # -------------------------- Train Model and Evaluate OOS --------------------------
 
@@ -87,7 +90,7 @@ cv_r2 = grid_search.best_score_
 # Predict test data
 y_pred = model.predict(X_test)
 test_r2 = round(metrics.r2_score(y_test, y_pred), decimal_places)
-
+print('Model performance on unseen test data: {} Prediction R2'.format(test_r2))
 # -------------------------- Interpretation --------------------------
 vars = X_col_names.copy()
 
@@ -95,8 +98,8 @@ vars = X_col_names.copy()
 save_path = "Results/Interpretation/Permutation/"
 result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
                                 random_state=seed, n_jobs=2, scoring=scoring)
-perm_importances = result.importances_mean
-dict = {'Feature': vars, "Importance": perm_importances}
+perm_importances_mean = result.importances_mean
+dict = {'Feature': vars, "Importance": perm_importances_mean}
 perm_imp_df = pd.DataFrame(dict)
 # flip so most important at top on graph
 perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
@@ -104,7 +107,17 @@ perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
 plot_permutation(perm_imp_df=perm_imp_df,
                  save_path=save_path,
                  save_name="{}_permutation".format(pred_model))
-# todo: add variance in perms to plot
+
+# Plot with bars:
+sorted_indices = result.importances_mean.argsort()
+fig, ax = plt.subplots(figsize=(8, 3.5))
+plt.barh(range(len(vars)), result.importances_mean[sorted_indices],
+         xerr=result.importances_std[sorted_indices], color="dodgerblue")
+plt.yticks(range(len(vars)), np.array(vars)[sorted_indices])
+plt.xlabel('Importance')
+plt.title('Permutation Importances (test set)')
+plt.tight_layout()
+plt.savefig(save_path +'{}_bars_permutation.png'.format(pred_model))
 
 # 2) Tree-based impurity importance
 if pred_model == 'rf':
@@ -170,5 +183,4 @@ g.plot()
 plt.tight_layout()
 plt.savefig(save_path+'{}_ice.png'.format(pred_model), bbox_inches='tight')
 
-
-print('done!')
+print('done')
