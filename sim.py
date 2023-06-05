@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP
 from Functions.pred import define_model
+from sklearn.inspection import PartialDependenceDisplay, plot_partial_dependence
 
 # Define the changeable parameters:
 seed = 93
@@ -35,6 +36,7 @@ ones = np.ones((n_features, n_features))
 corr_matrix = iv_cor * ones + (1 - iv_cor) * np.eye(n_features)
 
 # Generate X
+np.random.seed(seed)
 X = np.random.multivariate_normal(mean=means, cov=corr_matrix, size=n_samples)
 
 X_col_names = []
@@ -96,8 +98,6 @@ result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
 perm_importances = result.importances_mean
 dict = {'Feature': vars, "Importance": perm_importances}
 perm_imp_df = pd.DataFrame(dict)
-# just get most important x
-perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
 # flip so most important at top on graph
 perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
 # plot
@@ -148,9 +148,27 @@ for plot_type in plot_types:
                   save_path= save_path, title="SHAP importance (test set)",
                   save_name="{}_shap_{}.png".format(pred_model, plot_type))
 
-# PDP
+# 4) Partial Dependence Plot (PDP)
+# select features to plot based on permutation importance
+perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
+f1=perm_imp_df['Feature'].iloc[0]
+f2=perm_imp_df['Feature'].iloc[1]
+features = [f1,(f1,f2)]
+save_path="Results/Interpretation/PDP/"
+X_test = pd.DataFrame(X_test, columns=vars)
+fig, ax = plt.subplots(figsize=(8, 3.5))
+g = PartialDependenceDisplay.from_estimator(model, X_test, features)
+g.plot()
+plt.tight_layout()
+plt.savefig(save_path+'{}_pdp.png'.format(pred_model), bbox_inches='tight')
 
+# 5) Individual Conditional Expectation (ICE)
+save_path="Results/Interpretation/ICE/"
+fig, ax = plt.subplots(figsize=(8, 3.5))
+g = PartialDependenceDisplay.from_estimator(model, X_test, [f1], kind='both')
+g.plot()
+plt.tight_layout()
+plt.savefig(save_path+'{}_ice.png'.format(pred_model), bbox_inches='tight')
 
-# ICE
 
 print('done!')
