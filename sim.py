@@ -10,6 +10,7 @@ from Functions.gen_data import add_noise
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP
 from Functions.pred import define_model
 from sklearn.inspection import PartialDependenceDisplay
+from sklearn import tree
 
 # Define the changeable parameters:
 seed = 93
@@ -182,5 +183,29 @@ g = PartialDependenceDisplay.from_estimator(model, X_test, [f1], kind='both')
 g.plot()
 plt.tight_layout()
 plt.savefig(save_path+'{}_ice.png'.format(pred_model), bbox_inches='tight')
+
+# 6) Print Decision Tree structure
+if pred_model == 'rf':
+    # define meta-parameters (for visual puposes only)
+    max_depth = 3
+
+    # define tree
+    dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth)
+
+    # fit tree
+    dec_tree.fit(X_test, y_test)
+
+    fig = plt.figure(figsize=(10, 4))
+    _ = tree.plot_tree(dec_tree,
+                       feature_names=vars,
+                       class_names=True,
+                       filled=True,
+                       fontsize=8,
+                       precision=1,
+                       rounded=True)
+    save_path = "Results/Interpretation/Tree/"
+    plt.tight_layout()
+    plt.savefig(save_path + "example_dt_structure.png")
+
 
 print('done')
