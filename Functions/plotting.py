@@ -44,3 +44,21 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
     plt.cla()
     plt.close()
     return
+
+def plot_shap_force(i, X_test, model, save_path, save_name,
+                    pred_model, title):
+    if pred_model == "rf":
+        explainerModel = shap.TreeExplainer(model)
+    if pred_model == "enet":
+        explainerModel = shap.LinearExplainer(model)
+    shap_values_Model = explainerModel.shap_values(X_test)
+    p = shap.force_plot(explainerModel.expected_value, shap_values_Model[i],
+                        X_test.iloc[[i]], matplotlib = True, show = False)
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(save_path + save_name + '.png')
+    plt.close()
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return(p)

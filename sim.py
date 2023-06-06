@@ -7,7 +7,7 @@ from sklearn import metrics
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise
-from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP
+from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_shap_force
 from Functions.pred import define_model
 from sklearn.inspection import PartialDependenceDisplay
 from sklearn import tree
@@ -119,6 +119,9 @@ plt.xlabel('Importance')
 plt.title('Permutation Importances (test set)')
 plt.tight_layout()
 plt.savefig(save_path +'{}_bars_permutation.png'.format(pred_model))
+plt.clf()
+plt.cla()
+plt.close()
 
 # 2) Tree-based impurity importance
 if pred_model == 'rf':
@@ -161,6 +164,11 @@ for plot_type in plot_types:
                   n_features=n_features, plot_type=None,
                   save_path= save_path, title="SHAP importance (test set)",
                   save_name="{}_shap_{}.png".format(pred_model, plot_type))
+
+# example of local plot:
+plot_shap_force(i=0, X_test=pd.DataFrame(X_test, columns=vars), model=model, save_path=save_path,
+                save_name="{}_shap_local".format(pred_model), pred_model=pred_model,
+                title="Local SHAP explanation")
 
 # 4) Partial Dependence Plot (PDP)
 # select features to plot based on permutation importance
