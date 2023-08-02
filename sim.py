@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
-from Functions.gen_data import add_noise
-from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE
+from Functions.gen_data import add_noise, extract_coef
+from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
+    check_corr
 from Functions.pred import define_model
 from sklearn import tree
 
@@ -42,10 +43,10 @@ if __name__ == '__main__':
     np.random.seed(seed)
     X = np.random.multivariate_normal(mean=means, cov=corr_matrix, size=n_samples)
 
-    X_col_names = []
+    X_feature_names = []
     for i in list(range(1, X.shape[1] + 1)):
         n = "X{}".format(i)
-        X_col_names.append(n)
+        X_feature_names.append(n)
 
     # Predict y from X with fixed coefficients (b=1)
     y_pred = np.dot(X, np.ones((X.shape[1],)))
@@ -53,19 +54,15 @@ if __name__ == '__main__':
     # Add noise to y_pred so that X predicts y with a given r2
     y, iters_count = add_noise(y_pred, dv_r2)
 
-    # Check correlations
     X_and_y = pd.concat([pd.DataFrame(X), pd.DataFrame(y)], axis=1)
-    cor = round(X_and_y.corr(method='pearson'), decimal_places)
-    cor_cols = X_col_names + ["y"]
-    cor.columns = cor_cols
-    cor.index = cor_cols
+
+    # Check correlations
     save_path = "Outputs/"
-    cor.to_csv(save_path+"data_correlations.csv")
-    ax = sns.heatmap(cor, linewidth=0.1, cmap="Oranges")
-    plt.savefig(save_path + "data_cor_plot.png")
-    plt.clf()
-    plt.cla()
-    plt.close()
+    check_corr(X_and_y=X_and_y, X_feature_names=X_feature_names, save_path=save_path,
+               save_name="data_cor_plot", decimal_places=decimal_places)
+
+    # Extract coefficients
+    extract_coef(X=X, y=y, X_feature_names=X_feature_names, decimal_places=decimal_places)
 
     # -------------------------- Train Model and Evaluate OOS --------------------------
 
@@ -97,7 +94,7 @@ if __name__ == '__main__':
     print('Model performance on unseen test data: {} Prediction R2'.format(test_r2))
 
     # -------------------------- Interpretation --------------------------
-    vars = X_col_names.copy()
+    vars = X_feature_names.copy()
 
     # 1) Permutation importance
     save_path = "Results/Interpretation/Permutation/"

@@ -1,6 +1,7 @@
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
 def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
@@ -18,6 +19,8 @@ def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     plt.close()
     return
 
+
+
 def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
     y_ticks = np.arange(0, perm_imp_df.shape[0])
     fig, ax = plt.subplots(figsize=figsize)
@@ -33,6 +36,8 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
     plt.close()
     return
 
+
+
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
               save_path, save_name, title="", figsize=(8, 3.5)):
     plt.figure(figsize=figsize)
@@ -41,6 +46,21 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
     plt.title(title)
     plt.tight_layout()
     plt.savefig(save_path + save_name)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return
+
+
+
+def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
+    cor = round(X_and_y.corr(method='pearson'), decimal_places)
+    cor_cols = X_feature_names + ["y"]
+    cor.columns = cor_cols
+    cor.index = cor_cols
+    cor.to_csv(save_path + "data_correlations.csv")
+    ax = sns.heatmap(cor, linewidth=0.1, cmap="Oranges")
+    plt.savefig(save_path + save_name + ".png")
     plt.clf()
     plt.cla()
     plt.close()

@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 def add_noise(y_pred, r_squared):
     """
@@ -15,3 +16,21 @@ def add_noise(y_pred, r_squared):
         iter = iter + 1
     y = y_pred + noise
     return y, iter
+
+
+def extract_coef(X, y, X_feature_names, decimal_places):
+
+    # Create a LinearRegression object
+    lr = LinearRegression()
+
+    # Fit the model using the training data
+    lr.fit(X, y)
+
+    # Extract the coefficient values
+    coef_list = list(np.round(lr.coef_, decimal_places))
+
+    # Print the coefficient values
+    print("Coefficient values:")
+    for feature_name, coef in zip(X_feature_names, coef_list):
+        print(feature_name + "= " + str(coef))
+    return
