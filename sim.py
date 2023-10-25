@@ -2,6 +2,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 import shap as shap
+import datetime as dt
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.inspection import permutation_importance
@@ -33,7 +34,8 @@ seed = 93 # the random seed (used in the data generating process, splitting proc
 # -------------------------- Run Simulations --------------------------
 
 if __name__ == '__main__':
-    print("Running analysis for {} model".format(pred_model))
+    start_time = dt.datetime.now()
+    print("Running analysis for {} model...".format(pred_model))
 
     # -------------------------- Generate Data --------------------------
 
@@ -217,5 +219,5 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.savefig(save_path + "example_dt_structure.png")
 
-
-    print('done')
+    run_time = dt.datetime.now() - start_time
+    print(f'Finished! Run time: {run_time}')

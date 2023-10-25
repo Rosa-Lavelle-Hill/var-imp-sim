@@ -3,8 +3,12 @@ from sklearn.linear_model import LinearRegression
 
 def add_noise(y_pred, r_squared):
     """
-    Add random noise to y_true to achieve the desired R squared value.
+    Adds random noise to y_true to achieve the desired R squared value.
+    :param y_pred:
+    :param r_squared:
+    :return:
     """
+
     n = y_pred.shape[0]
     v = np.sum((y_pred - np.mean(y_pred)) **2)
     u = v * (1 - r_squared) / r_squared
@@ -18,7 +22,18 @@ def add_noise(y_pred, r_squared):
     return y, iter
 
 
-def extract_coef(X, y, X_feature_names, decimal_places):
+def extract_coef(X, y, X_feature_names, decimal_places,
+                 file_path="Outputs/",
+                 file_name="coefficients.txt"):
+    """
+    Extracts and saves the regression coefficients from a fitted model
+    :param X:
+    :param y:
+    :param X_feature_names:
+    :param decimal_places:
+    :param file_path:
+    :param file_name:
+    """
 
     # Create a LinearRegression object
     lr = LinearRegression()
@@ -30,8 +45,8 @@ def extract_coef(X, y, X_feature_names, decimal_places):
     coef_list = list(np.round(lr.coef_, decimal_places))
 
     # Print the coefficient values
-    print("Coefficient values:")
-    for feature_name, coef in zip(X_feature_names, coef_list):
-        print(feature_name + "= " + str(coef))
-
+    with open(file_path+file_name, "w") as txt:
+        txt.write("Coefficient values:\n")
+        for feature_name, coef in zip(X_feature_names, coef_list):
+            txt.write(f"{feature_name} = {coef}\n")
     return

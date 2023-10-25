@@ -1,0 +1,6 @@
+Coefficient values:
+X1 = 1.1
+X2 = 1.25
+X3 = 1.54
+X4 = -0.26
+X5 = 0.39
