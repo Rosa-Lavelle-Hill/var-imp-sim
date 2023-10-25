@@ -13,23 +13,29 @@ from Functions.pred import define_model
 from sklearn import tree
 
 # Define the changeable parameters:
-seed = 93
-pred_model = "enet"
-n_samples = 100
-n_features = 5
-iv_cor = 0.6
-dv_r2 = 0.6
-mean = 0
-sd = 1
-test_size = 0.5
-cv = 5
-scoring = "r2"
-decimal_places = 2
-permutations = 10
-# -------------------------- Generate Data --------------------------
+# supported model classes: "enet" for elastic net regression, "lasso" for lasso regression,
+# ..."tree" for a decision tree, and "rf" for a random forest
+pred_model = "rf" # prediction model used (see above for alternatives)
+n_samples = 100 # number of samples in generated data
+n_features = 5 # number of features (or "independent variables") in generated data
+mean = 0 # mean of generated data
+sd = 1 # standard deviation of generated data
+iv_cor = 0.6 # the Pearson r correlation of the features with one another in the generated data
+dv_r2 = 0.6 # the R squared value representing the extent the features can explain y in the full generated dataset
+test_size = 0.5 # ratio of training:test data
+cv = 5 # number of cross-validation splits
+scoring = "r2" # used for both the training and the testing: 'r2' is prediction R squared, for other options, see: https://scikit-learn.org/stable/modules/model_evaluation.html
+permutations = 10 # number of permutations in permutation importance calculations
+force_plot_data_instance_num = 0 # the row number indicating which person in the data to create a SHAP force plot for
+decimal_places = 2 # used for rounding
+seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
+
+# -------------------------- Run Simulations --------------------------
 
 if __name__ == '__main__':
     print("Running analysis for {} model".format(pred_model))
+
+    # -------------------------- Generate Data --------------------------
 
     # Define the mean and standard deviation for each variable
     means = [mean] * n_features
@@ -54,10 +60,9 @@ if __name__ == '__main__':
     # Add noise to y_pred so that X predicts y with a given r2
     y, iters_count = add_noise(y_pred, dv_r2)
 
-    X_and_y = pd.concat([pd.DataFrame(X), pd.DataFrame(y)], axis=1)
-
     # Check correlations
     save_path = "Outputs/"
+    X_and_y = pd.concat([pd.DataFrame(X), pd.DataFrame(y)], axis=1)
     check_corr(X_and_y=X_and_y, X_feature_names=X_feature_names, save_path=save_path,
                save_name="data_cor_plot", decimal_places=decimal_places)
 
@@ -93,7 +98,8 @@ if __name__ == '__main__':
     test_r2 = round(metrics.r2_score(y_test, y_pred), decimal_places)
     print('Model performance on unseen test data: {} Prediction R2'.format(test_r2))
 
-    # -------------------------- Interpretation --------------------------
+    # -------------------------- Interpretations --------------------------
+
     vars = X_feature_names.copy()
 
     # 1) Permutation importance
@@ -169,7 +175,7 @@ if __name__ == '__main__':
                       save_name="{}_shap_{}.png".format(pred_model, plot_type))
 
     # example of local plot:
-    plot_SHAP_force(i=0, X_test=pd.DataFrame(X_test, columns=vars), model=model, save_path=save_path,
+    plot_SHAP_force(i=force_plot_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model, save_path=save_path,
                     save_name="{}_shap_local".format(pred_model), pred_model=pred_model,
                     title="")
 

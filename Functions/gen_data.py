@@ -33,4 +33,5 @@ def extract_coef(X, y, X_feature_names, decimal_places):
     print("Coefficient values:")
     for feature_name, coef in zip(X_feature_names, coef_list):
         print(feature_name + "= " + str(coef))
+
     return
