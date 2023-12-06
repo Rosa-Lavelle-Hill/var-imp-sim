@@ -53,6 +53,14 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
 
 
 def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5)):
+    """
+    :param result: output from sklearn's permutation importance calculation
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    :param vars: list of variable names
+    :return:
+    """
     sorted_indices = result.importances_mean.argsort()
     fig, ax = plt.subplots(figsize=figsize)
     plt.barh(range(len(vars)), result.importances_mean[sorted_indices],
