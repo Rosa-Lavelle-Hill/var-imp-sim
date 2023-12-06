@@ -106,11 +106,11 @@ if __name__ == '__main__':
     test_r2 = round(metrics.r2_score(y_test, y_pred), decimal_places)
     print('Model performance on unseen test data: {} Prediction R2'.format(test_r2))
 
-    # -------------------------- Explanations --------------------------
+    # ------------------------------------------ Explanations ------------------------------------------
 
     vars = X_feature_names.copy()
 
-    # 1a) Permutation importance (a single imputation)
+    ## 1a) Permutation importance (a single imputation)
     save_path = "Results/Interpretation/Permutation/"
     result = permutation_importance(model, X_test, y_test, n_repeats=1, # a single imputation
                                     random_state=seed, n_jobs=2, scoring=scoring)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     plot_multiple_permutations(result=result, vars=vars, save_path=save_path,
                                save_name=f"{pred_model}_permutation_with_bars.png")
 
-    # 2) Tree-based impurity importance
+    ## 2) Tree-based impurity importance
     if (pred_model == 'rf') or (pred_model == "tree"):
         save_path = "Results/Interpretation/Impurity/"
         feature_importances = model.feature_importances_
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                       save_path=save_path,
                       save_name="{}_impurity".format(pred_model))
 
-    # 3) SHAP importance
+    ## 3) SHAP importance
     save_path = "Results/Interpretation/SHAP/"
     if (pred_model == "rf") or (pred_model == "tree"):
         explainer = shap.TreeExplainer(model, feature_pertubation="tree_path_dependent")# "true to the data" approach (see Lundberg et al., 2020)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     else:
         print("please enter one of the regression or tree based models: 'rf', 'tree', 'lasso, or 'enet'")
 
-    # 3a) Plot summary "global" plots:
+    # a) Plot summary "global" plots:
     plot_types = ["bar", "summary", "violin"]
     for plot_type in plot_types:
         plot_SHAP(shap_dict, col_list=vars,
@@ -172,12 +172,12 @@ if __name__ == '__main__':
                       save_path= save_path, title="SHAP importance (test set)",
                       save_name="{}_shap_{}.png".format(pred_model, plot_type))
 
-    # 3b) Example of SHAP local force plot for data instance i:
+    # b) Example of SHAP local force plot for data instance i:
     plot_SHAP_force(i=force_plot_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model, save_path=save_path,
                     save_name="{}_shap_local".format(pred_model), pred_model=pred_model,
                     title="")
 
-    # 4) Partial Dependence Plot (PDP)
+    ## 4) Partial Dependence Plot (PDP)
     # select features to plot automatically based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
     f1=perm_imp_df['Feature'].iloc[0] # to specify a feature, substitute for: f1='feature_name'
@@ -188,11 +188,11 @@ if __name__ == '__main__':
     X_test = pd.DataFrame(X_test, columns=vars)
     plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
 
-    # 5) Individual Conditional Expectation (ICE) plot
+    ## 5) Individual Conditional Expectation (ICE) plot
     save_path="Results/Interpretation/ICE/"
     plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
 
-    # 6) Accumulated Local Effects (ALE) graph
+    ## 6) Accumulated Local Effects (ALE) graph
     save_path = "Results/Interpretation/ALE/"
     grid = 50
     # a) one variable:
@@ -202,7 +202,9 @@ if __name__ == '__main__':
     ale_eff_2D = ale(X=X_test, model=model, feature=[f1, f2], grid_size=grid)
     plt.savefig(save_path + f"{pred_model}_2D_ale.png")
 
-    # 7) Print decision tree structure (here, for visual purposes only)
+    ## 7) LIME
+
+    ## 8) Print decision tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):
         save_path = "Results/Interpretation/Tree/"
         # pre-define depth parameter (as tree is for visual purposes only)
