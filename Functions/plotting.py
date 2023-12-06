@@ -52,6 +52,23 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
 
 
 
+def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5)):
+    sorted_indices = result.importances_mean.argsort()
+    fig, ax = plt.subplots(figsize=figsize)
+    plt.barh(range(len(vars)), result.importances_mean[sorted_indices],
+             xerr=result.importances_std[sorted_indices], color="dodgerblue")
+    plt.yticks(range(len(vars)), np.array(vars)[sorted_indices])
+    plt.xlabel('Importance')
+    plt.title('Permutation Importances (test set)')
+    plt.tight_layout()
+    plt.savefig(save_path + save_name)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return
+
+
+
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
               save_path, save_name, title="", figsize=(8, 3.5)):
     """
