@@ -1,3 +1,5 @@
+from random import random
+
 import seaborn as sns
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
     check_corr, print_tree, plot_multiple_permutations
 from Functions.pred import define_model
+from PyALE import ale
 
 # =================================
 # Define the changeable parameters:
@@ -19,7 +22,7 @@ from Functions.pred import define_model
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_model = "tree" # string defining the prediction model to use (see above for alternatives)
+pred_model = "rf" # string defining the prediction model to use (see above for alternatives)
 n_samples = 100 # number of samples in generated data
 n_features = 5 # number of features (or "independent variables") in generated data
 mean = 0 # mean of generated data
@@ -175,11 +178,11 @@ if __name__ == '__main__':
                     title="")
 
     # 4) Partial Dependence Plot (PDP)
-    # select features to plot based on permutation importance (most important)
+    # select features to plot automatically based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
     f1=perm_imp_df['Feature'].iloc[0] # to specify a feature, substitute for: f1='feature_name'
     f2=perm_imp_df['Feature'].iloc[1]
-    # first 2D, then 3D plot:
+    # first 2D, then 3D plot (on same figure):
     features = [f1, (f1, f2)]
     save_path="Results/Interpretation/PDP/"
     X_test = pd.DataFrame(X_test, columns=vars)
@@ -189,7 +192,17 @@ if __name__ == '__main__':
     save_path="Results/Interpretation/ICE/"
     plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
 
-    # 6) Print decision tree structure (here, for visual purposes only)
+    # 6) Accumulated Local Effects (ALE) graph
+    save_path = "Results/Interpretation/ALE/"
+    grid = 50
+    # a) one variable:
+    ale_eff = ale(X=X_test, model=model, feature=[f1], grid_size=grid, include_CI=False)
+    plt.savefig(save_path + f"{pred_model}_1D_ale.png")
+    # b) two variables:
+    ale_eff_2D = ale(X=X_test, model=model, feature=[f1, f2], grid_size=grid)
+    plt.savefig(save_path + f"{pred_model}_2D_ale.png")
+
+    # 7) Print decision tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):
         save_path = "Results/Interpretation/Tree/"
         # pre-define depth parameter (as tree is for visual purposes only)
@@ -198,3 +211,4 @@ if __name__ == '__main__':
 
     run_time = dt.datetime.now() - start_time
     print(f'Finished! Run time: {run_time}')
+# todo: requirements file
