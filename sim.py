@@ -9,9 +9,9 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
-    check_corr
+    check_corr, print_tree
 from Functions.pred import define_model
-from sklearn import tree
+
 
 # Define the changeable parameters:
 # supported model classes: "enet" for elastic net regression, "lasso" for lasso regression,
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Extract coefficients
     extract_coef(X=X, y=y, X_feature_names=X_feature_names, decimal_places=decimal_places)
 
-    # -------------------------- Train Model and Evaluate OOS --------------------------
+    # -------------------------- Train Model and Evaluate Out-Of-Sample (OOS) --------------------------
 
     # Split train and test (same random seed so constant stable comparison)
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=seed, test_size=test_size, shuffle=True)
@@ -95,12 +95,12 @@ if __name__ == '__main__':
     model.fit(X_train, y_train)
     cv_r2 = grid_search.best_score_
 
-    # Predict test data
+    # Predict OOS test data
     y_pred = model.predict(X_test)
     test_r2 = round(metrics.r2_score(y_test, y_pred), decimal_places)
     print('Model performance on unseen test data: {} Prediction R2'.format(test_r2))
 
-    # -------------------------- Interpretations --------------------------
+    # -------------------------- Explanations --------------------------
 
     vars = X_feature_names.copy()
 
@@ -164,6 +164,7 @@ if __name__ == '__main__':
     else:
         print("please enter one of the regression or tree based models: 'rf', 'tree', 'lasso, or 'enet'")
 
+    # Plot summary "global" plots:
     plot_types = ["bar", "summary", "violin"]
     for plot_type in plot_types:
         plot_SHAP(shap_dict, col_list=vars,
@@ -176,7 +177,7 @@ if __name__ == '__main__':
                       save_path= save_path, title="SHAP importance (test set)",
                       save_name="{}_shap_{}.png".format(pred_model, plot_type))
 
-    # example of local plot:
+    # Example of SHAP local force plot:
     plot_SHAP_force(i=force_plot_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model, save_path=save_path,
                     save_name="{}_shap_local".format(pred_model), pred_model=pred_model,
                     title="")
@@ -192,30 +193,16 @@ if __name__ == '__main__':
     X_test = pd.DataFrame(X_test, columns=vars)
     plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
 
-    # 5) Individual Conditional Expectation (ICE)
+    # 5) Individual Conditional Expectation (ICE) plot
     save_path="Results/Interpretation/ICE/"
     plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
 
     # 6) Print Decision Tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):
-        # pre-define depth parameters (for visual purposes only)
-        max_depth = 3
-        # define tree
-        dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth)
-        # fit tree
-        dec_tree.fit(X_test, y_test)
-
-        fig = plt.figure(figsize=(10, 4))
-        _ = tree.plot_tree(dec_tree,
-                           feature_names=vars,
-                           class_names=True,
-                           filled=True,
-                           fontsize=8,
-                           precision=1,
-                           rounded=True)
         save_path = "Results/Interpretation/Tree/"
-        plt.tight_layout()
-        plt.savefig(save_path + "example_dt_structure.png")
+        # pre-define depth parameter (as tree is for visual purposes only)
+        print_tree(X_test=X_test, y_test=y_test, max_depth=3, feature_names=vars,
+                   fontsize=8, save_path=save_path, save_name="example_dt_structure")
 
     run_time = dt.datetime.now() - start_time
     print(f'Finished! Run time: {run_time}')

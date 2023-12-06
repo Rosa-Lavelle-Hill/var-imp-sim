@@ -3,12 +3,11 @@ from sklearn.linear_model import LinearRegression
 
 def add_noise(y_pred, r_squared):
     """
-    Adds random noise to y_true to achieve the desired R squared value.
-    :param y_pred:
-    :param r_squared:
-    :return:
+    Adds random noise to y to achieve the desired R squared value.
+    :param y_pred: y variable noise should be added to
+    :param r_squared: desired R-squared value y should be predicted from X
+    :return: y_red with noise, number of iterations
     """
-
     n = y_pred.shape[0]
     v = np.sum((y_pred - np.mean(y_pred)) **2)
     u = v * (1 - r_squared) / r_squared
@@ -27,14 +26,13 @@ def extract_coef(X, y, X_feature_names, decimal_places,
                  file_name="coefficients.txt"):
     """
     Extracts and saves the regression coefficients from a fitted model
-    :param X:
-    :param y:
-    :param X_feature_names:
-    :param decimal_places:
-    :param file_path:
-    :param file_name:
+    :param X: X dataframe
+    :param y: y dataframe
+    :param X_feature_names: list of strings containing feature names
+    :param decimal_places: integer, number of decimal places for rounding
+    :param file_path: string for file path to save to
+    :param file_name: string for file save name
     """
-
     # Create a LinearRegression object
     lr = LinearRegression()
 

@@ -145,7 +145,7 @@ def plot_SHAP_force(i, X_test, model, save_path, save_name,
     :param i: index (integer) of the data instance to plot explanation for
     :param X_test: dataframe of data to be explained
     :param model: the specified model
-    :param save_path: file path where plot should be saved
+    :param save_path: string file path where plot should be saved
     :param pred_model: string containing name of prediction model
     :param title: string containing the title of the plot
     :param figsize: size of figure as a tuple
@@ -173,3 +173,34 @@ def plot_SHAP_force(i, X_test, model, save_path, save_name,
     plt.cla()
     plt.close()
     return(p)
+
+
+
+def print_tree(max_depth, X_test, y_test, feature_names, save_name, save_path,
+               fontsize=8, figsize=(10, 4)):
+    """
+    :param max_depth: integer to control the number of tree levels
+    :param X_test: dataframe of predictor variables
+    :param y_test: dataframe or array of outcome variables
+    :param feature_names: list of strings
+    :param save_name: string
+    :param fontsize: integer
+    :param figsize: tuple to control size
+    :param save_path: string file path where plot should be saved
+    :return:
+    """
+    # define a decision tree for visual puposes only
+    from sklearn import tree
+    dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth)
+    # fit tree
+    dec_tree.fit(X_test, y_test)
+    fig = plt.figure(figsize=figsize)
+    _ = tree.plot_tree(dec_tree,
+                       feature_names=feature_names,
+                       class_names=True,
+                       filled=True,
+                       fontsize=fontsize,
+                       precision=1,
+                       rounded=True)
+    plt.tight_layout()
+    plt.savefig(save_path + save_name + ".png")
