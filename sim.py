@@ -151,13 +151,13 @@ if __name__ == '__main__':
     # 3) SHAP importance
     save_path = "Results/Interpretation/SHAP/"
     if (pred_model == "rf") or (pred_model == "tree"):
-        explainer = shap.TreeExplainer(model, feature_pertubation="tree_path_dependent")
+        explainer = shap.TreeExplainer(model, feature_pertubation="tree_path_dependent") #todo: explain
         shap_dict = explainer(X_test)
         shap_values = explainer.shap_values(X_test)
         shap_values_df = pd.DataFrame(shap_values, columns=vars)
 
     elif (pred_model == "enet") or (pred_model == "lasso"):
-        explainer = shap.LinearExplainer(model, X_test, feature_pertubation="correlation_dependent")
+        explainer = shap.LinearExplainer(model, X_test, feature_pertubation="correlation_dependent") #todo: explain
         shap_dict = explainer(X_test)
         shap_values = explainer.shap_values(X_test)
         shap_values_df = pd.DataFrame(shap_values, columns=vars)
@@ -182,9 +182,9 @@ if __name__ == '__main__':
                     title="")
 
     # 4) Partial Dependence Plot (PDP)
-    # select features to plot based on permutation importance
+    # select features to plot based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
-    f1=perm_imp_df['Feature'].iloc[0]
+    f1=perm_imp_df['Feature'].iloc[0] # to specify a feature, substitute for: f1='feature_name'
     f2=perm_imp_df['Feature'].iloc[1]
     # first 2D, then 3D plot:
     features = [f1, (f1, f2)]
@@ -194,16 +194,14 @@ if __name__ == '__main__':
 
     # 5) Individual Conditional Expectation (ICE)
     save_path="Results/Interpretation/ICE/"
-    plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
+    plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
 
-    # 6) Print Decision Tree structure (for visual purposes only)
+    # 6) Print Decision Tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):
-        # define meta-parameters (for visual purposes only)
+        # pre-define depth parameters (for visual purposes only)
         max_depth = 3
-
         # define tree
         dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth)
-
         # fit tree
         dec_tree.fit(X_test, y_test)
 

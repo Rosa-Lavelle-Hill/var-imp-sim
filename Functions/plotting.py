@@ -5,6 +5,13 @@ import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
 def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
+    """
+    Plots impurity importance from dataframe
+    :param impurity_imp_df: dataframe of importance values with a "Feature" and "Importance" column
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    """
     y_ticks = np.arange(0, impurity_imp_df.shape[0])
     fig, ax = plt.subplots(figsize=figsize)
     ax.barh(y_ticks, impurity_imp_df["Importance"], color="dodgerblue")
@@ -22,6 +29,13 @@ def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
 
 
 def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
+    """
+    Plots permutation importance from dataframe
+    :param perm_imp_df: dataframe of importance values with a "Feature" and "Importance" column
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    """
     y_ticks = np.arange(0, perm_imp_df.shape[0])
     fig, ax = plt.subplots(figsize=figsize)
     ax.barh(y_ticks, perm_imp_df["Importance"], color="dodgerblue")
@@ -40,6 +54,17 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
 
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
               save_path, save_name, title="", figsize=(8, 3.5)):
+    """
+    Plots SHAP values from a dictionary of values
+    :param shap_dict: dictionary output from the SHAP function
+    :param col_list: list of column/feature names
+    :param plot_type: the type of SHAP plot (e.g., summary, bar, violin)
+    :param n_features: the number of features to display (plots most important first)
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    :param title: title of plot
+    """
     plt.figure(figsize=figsize)
     shap.summary_plot(shap_dict, feature_names=col_list, show=False,
                       plot_type=plot_type, max_display=n_features)
@@ -54,6 +79,13 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
 
 
 def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
+    """
+    Plots a heatmap of Pearson r correlation coefficients
+    :param X_and_y: dataframe containing X and y features
+    :param save_name: name of plot to be saved
+    :param X_feature_names: list of feature names
+    :param decimal_places: number (int) of decimal places to round to
+    """
     cor = round(X_and_y.corr(method='pearson'), decimal_places)
     cor_cols = X_feature_names + ["y"]
     cor.columns = cor_cols
@@ -68,7 +100,17 @@ def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
 
 
 
-def plot_PDP(save_path, pred_model, model, X_test, features, figsize=(8, 3.5)):
+def plot_PDP(pred_model, model, X_test, features, save_path, figsize=(8, 3.5)):
+    """
+    Plots two a partial dependence plots with either one or two variables depending on the list of features
+    :param pred_model: string containing name of prediction model
+    :param model: the specified model
+    :param X_test: dataframe of data to be explained
+    :param features: a list containing either single features or a tuple of two features
+    :param figsize: size of figure as a tuple
+    :param save_path: file path where plot should be saved
+    :return:
+    """
     fig, ax = plt.subplots(figsize=figsize)
     g = PartialDependenceDisplay.from_estimator(model, X_test, features)
     g.plot()
@@ -78,9 +120,17 @@ def plot_PDP(save_path, pred_model, model, X_test, features, figsize=(8, 3.5)):
 
 
 
-def plot_ICE(save_path, pred_model, model, X_test, features, figsize=(8, 3.5)):
+def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5)):
+    """
+    :param pred_model: string containing name of prediction model
+    :param model: the specified model
+    :param X_test: dataframe of data to be explained
+    :param feature: a string containing a single feature name
+    :param save_path: file path where plot should be saved
+    :return:
+    """
     fig, ax = plt.subplots(figsize=figsize)
-    g = PartialDependenceDisplay.from_estimator(model, X_test, [features[0]], kind='both')
+    g = PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind='both')
     g.plot()
     plt.tight_layout()
     plt.savefig(save_path + '{}_ice.png'.format(pred_model), bbox_inches='tight')
@@ -90,6 +140,17 @@ def plot_ICE(save_path, pred_model, model, X_test, features, figsize=(8, 3.5)):
 
 def plot_SHAP_force(i, X_test, model, save_path, save_name,
                     pred_model, title, figsize=(8, 4)):
+    """
+
+    :param i: index (integer) of the data instance to plot explanation for
+    :param X_test: dataframe of data to be explained
+    :param model: the specified model
+    :param save_path: file path where plot should be saved
+    :param pred_model: string containing name of prediction model
+    :param title: string containing the title of the plot
+    :param figsize: size of figure as a tuple
+    :return:
+    """
     if (pred_model == "rf") or (pred_model == "tree"):
         explainerModel = shap.TreeExplainer(model)
     elif (pred_model == "enet") or (pred_model == "lasso"):
