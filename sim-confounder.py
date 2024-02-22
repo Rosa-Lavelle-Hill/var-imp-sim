@@ -99,7 +99,8 @@ if __name__ == '__main__':
         print(f"best hyper-params from training: {best_params}")
         model.set_params(**best_params)
         model.fit(X_train, y_train)
-        cv_r2 = grid_search.best_score_
+        cv_r2 = round(grid_search.best_score_, decimal_places)
+        print(f'Model performance on validation data: {cv_r2} Prediction R2')
 
         # Predict OOS test data
         y_pred = model.predict(X_test)
