@@ -146,30 +146,41 @@ if __name__ == '__main__':
 
         ## 3) SHAP importance
         save_path = results_path + "SHAP/"
+        shap_results_dict = {}
         if (pred_model == "rf") or (pred_model == "tree"):
-            explainer = shap.TreeExplainer(model, feature_pertubation="tree_path_dependent")# "true to the data" approach (see Lundberg et al., 2020)
-            shap_dict = explainer(X_test)
-            shap_values = explainer.shap_values(X_test)
-            shap_values_df = pd.DataFrame(shap_values, columns=vars)
+            method_types = ["tree_path_dependent", "interventional"]# (see Lundberg et al., 2020) https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html
+            data_options = [None, X_test]
+            for method_type, data_option in zip(method_types, data_options):
+                explainer = shap.TreeExplainer(model=model, data=data_option, feature_perturbation=method_type)
+
+                shap_dict = explainer(X_test)
+                shap_values = explainer.shap_values(X_test)
+                shap_values_df = pd.DataFrame(shap_values, columns=vars)
+                shap_results_dict[method_type] = shap_dict
 
         elif (pred_model == "enet") or (pred_model == "lasso"):
-            explainer = shap.LinearExplainer(model, X_test, feature_pertubation="correlation_dependent") # "true to the data" approach (see Lundberg & Lee, 2017)
-            shap_dict = explainer(X_test)
-            shap_values = explainer.shap_values(X_test)
-            shap_values_df = pd.DataFrame(shap_values, columns=vars)
+            method_types = ["correlation_dependent", "interventional"] # (see Lundberg & Lee, 2017) https://shap-lrjball.readthedocs.io/en/latest/generated/shap.LinearExplainer.html
+            data_options = [X_test, X_test]
+            for method_type, data_option in zip(method_types, data_options):
+                explainer = shap.LinearExplainer(model, data_option, feature_perturbation=method_type)
+                shap_dict = explainer(X_test)
+                shap_values = explainer.shap_values(X_test)
+                shap_values_df = pd.DataFrame(shap_values, columns=vars)
+                shap_results_dict[method_type] = shap_dict
 
         # a) Plot summary "global" plots:
-        plot_types = ["bar", "summary", "violin"]
-        for plot_type in plot_types:
-            plot_SHAP(shap_dict, col_list=vars,
-                      n_features=n_features, plot_type=plot_type,
-                      save_path= save_path, title="SHAP importance (test set)",
-                      save_name=f"{pred_model}_shap_{plot_type}.png")
-            if plot_type == "summary":
+        for method, shap_dict in shap_results_dict.items():
+            plot_types = ["bar", "summary", "violin"]
+            for plot_type in plot_types:
                 plot_SHAP(shap_dict, col_list=vars,
-                          n_features=n_features, plot_type=None,
+                          n_features=n_features, plot_type=plot_type,
                           save_path= save_path, title="SHAP importance (test set)",
-                          save_name=f"{pred_model}_shap_{plot_type}.png")
+                          save_name=f"{pred_model}_shap_{plot_type}_{method}.png")
+                if plot_type == "summary":
+                    plot_SHAP(shap_dict, col_list=vars,
+                              n_features=n_features, plot_type=None,
+                              save_path= save_path, title="SHAP importance (test set)",
+                              save_name=f"{pred_model}_shap_{plot_type}_{method}.png")
 
         # b) Example of SHAP local force plot for data instance i:
         plot_SHAP_force(i=explain_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model,

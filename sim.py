@@ -22,7 +22,7 @@ from PyALE import ale
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_model = "tree" # string defining the prediction model to use (see above for alternatives)
+pred_model = "rf" # string defining the prediction model to use (see above for alternatives)
 n_samples = 100 # number of samples in generated data
 n_features = 5 # number of features (or "independent variables") in generated data
 mean = 0 # mean of generated data
