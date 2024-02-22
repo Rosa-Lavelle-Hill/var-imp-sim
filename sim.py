@@ -22,7 +22,7 @@ from PyALE import ale
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_model = "rf" # string defining the prediction model to use (see above for alternatives)
+pred_model = "lasso" # string defining the prediction model to use (see above for alternatives)
 n_samples = 100 # number of samples in generated data
 n_features = 5 # number of features (or "independent variables") in generated data
 mean = 0 # mean of generated data
@@ -33,6 +33,7 @@ test_size = 0.5 # ratio of training:test data
 cv = 5 # number of cross-validation splits
 scoring = "r2" # scoring used for both the training and the testing: 'r2' is prediction R-squared, for other options, see: https://scikit-learn.org/stable/modules/model_evaluation.html
 permutations = 10 # number of permutations in permutation importance calculations
+shap_method = "correlation_dependent" # "interventional" = true to model; "correlation_dependent" = true to data (for tree-based models "path_dependent") (Lundberg & Lee, 2017; 2020)
 explain_data_instance_num = 0 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
@@ -151,13 +152,16 @@ if __name__ == '__main__':
     ## 3) SHAP importance
     save_path = results_path + "SHAP/"
     if (pred_model == "rf") or (pred_model == "tree"):
-        explainer = shap.TreeExplainer(model, feature_pertubation="tree_path_dependent")# "true to the data" approach (see Lundberg et al., 2020)
+        if shap_method == "correlation_dependent":
+            explainer = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent")
+        else:
+            explainer = shap.TreeExplainer(model, X_test, feature_perturbation=shap_method)
         shap_dict = explainer(X_test)
         shap_values = explainer.shap_values(X_test)
         shap_values_df = pd.DataFrame(shap_values, columns=vars)
 
     elif (pred_model == "enet") or (pred_model == "lasso"):
-        explainer = shap.LinearExplainer(model, X_test, feature_pertubation="correlation_dependent") # "true to the data" approach (see Lundberg & Lee, 2017)
+        explainer = shap.LinearExplainer(model, X_test, feature_perturbation=shap_method)
         shap_dict = explainer(X_test)
         shap_values = explainer.shap_values(X_test)
         shap_values_df = pd.DataFrame(shap_values, columns=vars)
@@ -168,16 +172,16 @@ if __name__ == '__main__':
         plot_SHAP(shap_dict, col_list=vars,
                   n_features=n_features, plot_type=plot_type,
                   save_path= save_path, title="SHAP importance (test set)",
-                  save_name=f"{pred_model}_shap_{plot_type}.png")
+                  save_name=f"{pred_model}_shap_{plot_type}_{shap_method}.png")
         if plot_type == "summary":
             plot_SHAP(shap_dict, col_list=vars,
                       n_features=n_features, plot_type=None,
                       save_path= save_path, title="SHAP importance (test set)",
-                      save_name=f"{pred_model}_shap_{plot_type}.png")
+                      save_name=f"{pred_model}_shap_{plot_type}_{shap_method}.png")
 
     # b) Example of SHAP local force plot for data instance i:
     plot_SHAP_force(i=explain_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model,
-                    save_path=save_path, save_name=f"{pred_model}_shap_local", pred_model=pred_model,
+                    save_path=save_path, save_name=f"{pred_model}_shap_local_{shap_method}", pred_model=pred_model,
                     title="local explanation")
 
     ## 4) Partial Dependence Plot (PDP)
