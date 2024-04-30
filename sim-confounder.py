@@ -46,8 +46,8 @@ if __name__ == '__main__':
     X2 = np.random.normal(size=n_samples)
     X3 = np.random.normal(size=n_samples)
 
-    # Y is influenced by X1 and X3 but not X2
-    y = 2 * X1 + 3 * X3 + np.random.normal(size=n_samples)
+    # Y is influenced by X1 and X2 but not X3
+    y = 2 * X1 + 3 * X2 + np.random.normal(size=n_samples)
 
     # Create a dataframe with these variables
     data = pd.DataFrame({'X1': X1, 'X2': X2, 'X3': X3, 'y': y})
@@ -57,8 +57,8 @@ if __name__ == '__main__':
     correlation_matrix = data.corr()
     print(correlation_matrix)
 
-    # Increase correlation between X2 and X1/X3
-    data['X2'] = data['X1'] + data['X3'] + X2
+    # Increase correlation between X3 and X1/X2
+    data['X3'] = data['X1'] + data['X2'] + X3
 
     # Check correlations after manipulation
     print("Correlations between variables after manipulation:")

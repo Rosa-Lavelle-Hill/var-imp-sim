@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
+font_size = 12
+label_size = 18
+
 def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     """
     Plots impurity importance from dataframe
@@ -18,7 +21,8 @@ def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(impurity_imp_df["Feature"])
     ax.set_title("Impurity Reduction Importance (training set)")
-    ax.set_xlabel("Impurity Reduction")
+    ax.tick_params(axis='y', labelsize=label_size)
+    ax.set_xlabel('Importance', fontsize=font_size)
     fig.tight_layout()
     plt.savefig(save_path + save_name + ".png")
     plt.clf()
@@ -42,7 +46,8 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(perm_imp_df["Feature"])
     ax.set_title("Permutation Importance (test set)")
-    ax.set_xlabel("Permutation Importance")
+    ax.set_xlabel('Importance', fontsize=font_size)
+    ax.tick_params(axis='y', labelsize=label_size)
     fig.tight_layout()
     plt.savefig(save_path + save_name + ".png")
     plt.clf()
@@ -52,7 +57,7 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
 
 
 
-def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5)):
+def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5), order=False):
     """
     :param result: output from sklearn's permutation importance calculation
     :param save_path: path where plot should be saved
@@ -66,7 +71,8 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3
     plt.barh(range(len(vars)), result.importances_mean[sorted_indices],
              xerr=result.importances_std[sorted_indices], color="dodgerblue")
     plt.yticks(range(len(vars)), np.array(vars)[sorted_indices])
-    plt.xlabel('Importance')
+    ax.tick_params(axis='y', labelsize=label_size)
+    ax.set_xlabel('Importance', fontsize=font_size)
     plt.title('Permutation Importances (test set)')
     plt.tight_layout()
     plt.savefig(save_path + save_name)
@@ -94,6 +100,7 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
     shap.summary_plot(shap_dict, feature_names=col_list, show=False,
                       plot_type=plot_type, max_display=n_features)
     plt.title(title)
+    plt.tick_params(axis='y', labelsize=label_size)
     plt.tight_layout()
     plt.savefig(save_path + save_name)
     plt.clf()
@@ -125,7 +132,7 @@ def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
 
 
 
-def plot_PDP(pred_model, model, X_test, features, save_path, figsize=(8, 3.5)):
+def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", figsize=(8, 3.5)):
     """
     Plots two a partial dependence plots with either one or two variables depending on the list of features
     :param pred_model: string containing name of prediction model
@@ -137,10 +144,13 @@ def plot_PDP(pred_model, model, X_test, features, save_path, figsize=(8, 3.5)):
     :return:
     """
     fig, ax = plt.subplots(figsize=figsize)
+    if len(features) == 1:
+        ax.set_ylabel('PD', fontsize=label_size)
+        ax.set_xlabel(features[0], fontsize=label_size)
     g = PartialDependenceDisplay.from_estimator(model, X_test, features)
     g.plot()
     plt.tight_layout()
-    plt.savefig(save_path + '{}_pdp.png'.format(pred_model), bbox_inches='tight')
+    plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
     return
 
 
@@ -181,7 +191,7 @@ def plot_SHAP_force(i, X_test, model, save_path, save_name,
     elif (pred_model == "enet") or (pred_model == "lasso"):
         masker = shap.maskers.Independent(data=X_test)
         explainerModel = shap.LinearExplainer(model, masker=masker)
-    # todo: needs a mask
+    # todo: needs a mask!!
     else:
         print("please enter one of the regression or tree based models: 'rf', 'tree', 'lasso, or 'enet'")
         breakpoint()
@@ -222,10 +232,10 @@ def print_tree(max_depth, X_test, y_test, feature_names, save_name, save_path,
     fig = plt.figure(figsize=figsize)
     _ = tree.plot_tree(dec_tree,
                        feature_names=feature_names,
-                       class_names=True,
                        filled=True,
                        fontsize=fontsize,
                        precision=1,
-                       rounded=True)
+                       rounded=True,
+                       class_names=True)
     plt.tight_layout()
     plt.savefig(save_path + save_name + ".png")
