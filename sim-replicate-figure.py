@@ -19,7 +19,7 @@ from PyALE import ale
 # Define the changeable parameters:
 # =================================
 
-n_samples = 100 # number of samples in generated data
+n_samples = 1000 # number of samples in generated data
 n_features = 5 # number of features (or "independent variables") in generated data
 mean = 0 # mean of generated data
 sd = 1 # standard deviation of generated data
@@ -106,7 +106,7 @@ for pred_model in ["rf"]:
 
     if (pred_model == "rf") and (replicate_figure_model == True):
         # parameters used to replicate Figure:
-        best_params = {'max_depth': 5, 'max_features': 0.3, 'min_samples_split': 6, 'n_estimators': 50}
+        best_params = {'max_depth': 5, 'max_features': 0.3, 'min_samples_split': 6, 'n_estimators': 100}
         model, _ = define_model(pred_model=pred_model, fixed_seed=seed)
 
     model.set_params(**best_params)
@@ -185,9 +185,11 @@ for pred_model in ["rf"]:
                       save_name=f"{pred_model}_shap_{plot_type}_{shap_method}.png")
 
     # b) Example of SHAP local force plot for data instance i:
-    plot_SHAP_force(i=explain_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model,
-                    save_path=save_path, save_name=f"{pred_model}_shap_local_{shap_method}", pred_model=pred_model,
-                    title="local explanation")
+    instances = [explain_data_instance_num + 1, 230]
+    for instance in instances:
+        plot_SHAP_force(i=instance, X_test=pd.DataFrame(X_test, columns=vars), model=model,
+                        save_path=save_path, save_name=f"{pred_model}_shap_local_{shap_method}_xi{instance}", pred_model=pred_model,
+                        title="local explanation")
 
     ## 4) Partial Dependence Plot (PDP)
     # select features to plot automatically based on permutation importance (most important)
@@ -222,9 +224,8 @@ for pred_model in ["rf"]:
     save_path = results_path + "LIME/"
     # initilise LIME on train data
     lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train, feature_names=vars, mode="regression",
-                                                            verbose=False, discretize_continuous=False)
+                                                            random_state=seed, verbose=False, discretize_continuous=False)
     # explain 3 different instances to show difference
-    instances = [explain_data_instance_num, explain_data_instance_num+1, explain_data_instance_num+2]
     for instance in instances:
         # explain instance of test data
         X_instance = X_test.iloc[instance, :]
@@ -232,7 +233,7 @@ for pred_model in ["rf"]:
         # Create a plot from the explanation
         fig = exp.as_pyplot_figure()
         plt.tight_layout()
-        plt.savefig(save_path + f'{pred_model}_lime_x{instance}.png')
+        plt.savefig(save_path + f'{pred_model}_lime_xi{instance}.png')
 
     ## 8) Print decision tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):

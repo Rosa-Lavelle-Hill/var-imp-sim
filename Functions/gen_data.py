@@ -18,6 +18,7 @@ def add_noise(y_pred, r_squared):
         noise = np.random.normal(0, np.sqrt(noise_var), size=n)
         iter = iter + 1
     y = y_pred + noise
+    print("noise added: " + str(round(noise_var, 2)))
     return y, iter
 
 

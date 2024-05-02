@@ -127,7 +127,7 @@ if __name__ == '__main__':
         result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
                                         random_state=seed, n_jobs=2, scoring=scoring)
         plot_multiple_permutations(result=result, vars=vars, save_path=save_path, order=True,
-                                   save_name=f"{pred_model}_permutation_with_bars.png")
+                                   save_name=f"{pred_model}_permutation_with_bars.png", title="")
 
         ## 2) Tree-based impurity importance
         if (pred_model == 'rf') or (pred_model == "tree"):
@@ -214,7 +214,8 @@ if __name__ == '__main__':
         ## 7) Local Interpretable Model-agnostic Explanations (LIME)
         save_path = results_path + "LIME/"
         lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train, feature_names=vars, mode="regression",
-                                                                verbose=False, discretize_continuous=False)
+                                                                verbose=False, discretize_continuous=False,
+                                                                random_state=seed)
         X_instance = X_test.iloc[explain_data_instance_num, :]
         exp = lime_explainer.explain_instance(data_row=X_instance, predict_fn=model.predict, num_features=len(vars))
         # Create a plot from the explanation

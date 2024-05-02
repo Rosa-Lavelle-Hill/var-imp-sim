@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
-font_size = 12
-label_size = 18
+font_size = 16
+label_size = 20
 
 def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     """
@@ -71,7 +71,7 @@ def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', '
     fig, ax = plt.subplots(figsize=figsize)
     plt.barh(shap_values["Feature"], shap_values["Importance"], color="dodgerblue", )
     ax.set_yticklabels(shap_values["Feature"])
-    ax.set_title("SHAP importance (test set)")
+    ax.set_title(" ")
     ax.set_xlabel('Importance', fontsize=font_size)
     ax.tick_params(axis='y', labelsize=label_size)
     fig.tight_layout()
@@ -83,7 +83,8 @@ def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', '
 
 
 def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5),
-                               order=False, variable_order=['X3', 'X2', 'X1']):
+                               order=False, title= 'Permutation Importances (test set)',
+                               variable_order=['X3', 'X2', 'X1']):
     """
     :param result: output from sklearn's permutation importance calculation
     :param save_path: path where plot should be saved
@@ -104,7 +105,7 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3
     plt.yticks(range(len(sorted_indices)), np.array(vars)[sorted_indices])
     ax.set_xlabel('Importance', fontsize=font_size)
     ax.tick_params(axis='y', labelsize=label_size)
-    plt.title('Permutation Importances (test set)')
+    plt.title(title)
     plt.tight_layout()
     plt.savefig(save_path + save_name)
     plt.clf()
@@ -179,11 +180,11 @@ def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", 
     :return:
     """
     fig, ax = plt.subplots(figsize=figsize)
+    g = PartialDependenceDisplay.from_estimator(model, X_test, features)
+    g.plot()
     if len(features) == 1:
         ax.set_ylabel('PD', fontsize=label_size)
         ax.set_xlabel(features[0], fontsize=label_size)
-    g = PartialDependenceDisplay.from_estimator(model, X_test, features)
-    g.plot()
     plt.tight_layout()
     plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
     return

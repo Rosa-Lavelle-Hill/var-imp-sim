@@ -35,7 +35,7 @@ decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
 results_path = "Results figure-U/Interpretation/"
 outputs_path = "Outputs figure-U/"
-replicate_figure_model = False
+replicate_figure_model = True
 # -------------------------- Run Simulations --------------------------
 
 start_time = dt.datetime.now()
@@ -76,9 +76,9 @@ for pred_model in ["rf"]:
     # Convert the list of x values to a NumPy array
     X6 = np.array(X_values)
     plt.scatter(X6, y, alpha=0.5)
-    plt.xlabel('X6')
-    plt.ylabel('Y')
-    plt.title('U-shaped Variable')
+    plt.xlabel('X6', fontsize=20)
+    plt.ylabel('Y', fontsize=20)
+    plt.title('')
     plt.savefig(outputs_path + "U-plot.png")
     plt.close()
 
@@ -245,7 +245,8 @@ for pred_model in ["rf"]:
     save_path = results_path + "LIME/"
     # initilise LIME on train data
     lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train, feature_names=vars, mode="regression",
-                                                            verbose=False, discretize_continuous=False)
+                                                            verbose=False, discretize_continuous=False,
+                                                            random_state=seed)
     # explain 3 different instances to show difference
     instances = [explain_data_instance_num, explain_data_instance_num+1, explain_data_instance_num+2]
     for instance in instances:

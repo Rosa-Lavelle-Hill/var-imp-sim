@@ -229,7 +229,7 @@ if __name__ == '__main__':
     ## 7) Local Interpretable Model-agnostic Explanations (LIME)
     save_path = results_path + "LIME/"
     lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train, feature_names=vars, mode="regression",
-                                                            verbose=False, discretize_continuous=False)
+                                                            random_state=seed, verbose=False, discretize_continuous=False)
     # explain 3 different instances to show difference
     instances = [explain_data_instance_num, explain_data_instance_num+1, explain_data_instance_num+2]
     for instance in instances:
