@@ -12,7 +12,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
-    check_corr, print_tree, plot_multiple_permutations
+    check_corr, print_tree, plot_multiple_permutations, plot_SHAP_ordered
 from Functions.pred import define_model
 from PyALE import ale
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         # b) multiple permutations (plot with variance bars)
         result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
                                         random_state=seed, n_jobs=2, scoring=scoring)
-        plot_multiple_permutations(result=result, vars=vars, save_path=save_path,
+        plot_multiple_permutations(result=result, vars=vars, save_path=save_path, order=True,
                                    save_name=f"{pred_model}_permutation_with_bars.png")
 
         ## 2) Tree-based impurity importance
@@ -153,35 +153,34 @@ if __name__ == '__main__':
             data_options = [None, X_test]
             for method_type, data_option in zip(method_types, data_options):
                 explainer = shap.TreeExplainer(model=model, data=data_option, feature_perturbation=method_type)
-
-                shap_dict = explainer(X_test)
                 shap_values = explainer.shap_values(X_test)
                 shap_values_df = pd.DataFrame(shap_values, columns=vars)
-                shap_results_dict[method_type] = shap_dict
+                shap_values_df_abs = abs(shap_values_df)
+                shap_importance_df = shap_values_df_abs.mean(axis=0).reset_index()
+                shap_importance_df.columns = ["Feature", "Importance"]
+                # don't plot constant
+                shap_importance_df = shap_importance_df.loc[1:3]
+                shap_results_dict[method_type] = shap_importance_df
 
         elif (pred_model == "enet") or (pred_model == "lasso"):
             method_types = ["correlation_dependent", "interventional"] # (see Lundberg & Lee, 2017) https://shap-lrjball.readthedocs.io/en/latest/generated/shap.LinearExplainer.html
             data_options = [X_test, X_test]
             for method_type, data_option in zip(method_types, data_options):
                 explainer = shap.LinearExplainer(model, data_option, feature_perturbation=method_type)
-                shap_dict = explainer(X_test)
                 shap_values = explainer.shap_values(X_test)
                 shap_values_df = pd.DataFrame(shap_values, columns=vars)
-                shap_results_dict[method_type] = shap_dict
+                shap_values_df_abs = abs(shap_values_df)
+                shap_importance_df = shap_values_df_abs.mean(axis=0).reset_index()
+                shap_importance_df.columns = ["Feature", "Importance"]
+                # don't plot constant
+                shap_importance_df = shap_importance_df.loc[1:3]
+                shap_results_dict[method_type] = shap_importance_df
 
-        # a) Plot summary "global" plots:
+        # a) Plot summary "global" bar plots:
         for method, shap_dict in shap_results_dict.items():
-            plot_types = ["bar", "summary", "violin"]
-            for plot_type in plot_types:
-                plot_SHAP(shap_dict, col_list=vars,
-                          n_features=n_features, plot_type=plot_type,
-                          save_path= save_path, title="SHAP importance (test set)",
-                          save_name=f"{pred_model}_shap_{plot_type}_{method}.png")
-                if plot_type == "summary":
-                    plot_SHAP(shap_dict, col_list=vars,
-                              n_features=n_features, plot_type=None,
-                              save_path= save_path, title="SHAP importance (test set)",
-                              save_name=f"{pred_model}_shap_{plot_type}_{method}.png")
+            plot_SHAP_ordered(shap_dict,
+                      save_path= save_path,
+                      save_name=f"{pred_model}_shap_ORDERED_{method}")
 
         # b) Example of SHAP local force plot for data instance i:
         plot_SHAP_force(i=explain_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model,

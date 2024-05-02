@@ -1,3 +1,4 @@
+import pandas as pd
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,23 +57,53 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
     return
 
 
+def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', 'X2', 'X1'], figsize=(8, 3.5)):
+    """
+    Plots ordered SHAP importance from dataframe
+    :param shap_values: dataframe of importance values with a "Feature" and "Importance" column
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    """
+    shap_values["Feature"] = pd.Categorical(shap_values["Feature"], categories=variable_order, ordered=True)
+    # Sort the DataFrame based on the categorical order
+    shap_values = shap_values.sort_values("Feature")
+    fig, ax = plt.subplots(figsize=figsize)
+    plt.barh(shap_values["Feature"], shap_values["Importance"], color="dodgerblue", )
+    ax.set_yticklabels(shap_values["Feature"])
+    ax.set_title("SHAP importance (test set)")
+    ax.set_xlabel('Importance', fontsize=font_size)
+    ax.tick_params(axis='y', labelsize=label_size)
+    fig.tight_layout()
+    plt.savefig(save_path + save_name + ".png")
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return
 
-def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5), order=False):
+
+def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5),
+                               order=False, variable_order=['X3', 'X2', 'X1']):
     """
     :param result: output from sklearn's permutation importance calculation
     :param save_path: path where plot should be saved
     :param save_name: name of plot to be saved
     :param figsize: size of figure as a tuple
     :param vars: list of variable names
+    :param order: if True, variables will be ordered as stated in list variable_order
     :return:
     """
     sorted_indices = result.importances_mean.argsort()
+    if order:
+        # Filter out variables present in data and sort them according to the order
+        sorted_indices = [vars.index(var) for var in variable_order if var in vars]
+
     fig, ax = plt.subplots(figsize=figsize)
-    plt.barh(range(len(vars)), result.importances_mean[sorted_indices],
+    plt.barh(range(len(sorted_indices)), result.importances_mean[sorted_indices],
              xerr=result.importances_std[sorted_indices], color="dodgerblue")
-    plt.yticks(range(len(vars)), np.array(vars)[sorted_indices])
-    ax.tick_params(axis='y', labelsize=label_size)
+    plt.yticks(range(len(sorted_indices)), np.array(vars)[sorted_indices])
     ax.set_xlabel('Importance', fontsize=font_size)
+    ax.tick_params(axis='y', labelsize=label_size)
     plt.title('Permutation Importances (test set)')
     plt.tight_layout()
     plt.savefig(save_path + save_name)
@@ -84,7 +115,8 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3
 
 
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
-              save_path, save_name, title="", figsize=(8, 3.5)):
+              save_path, save_name, title="", figsize=(8, 3.5),
+                     order=False, variable_order=['X3', 'X2', 'X1', 'const']):
     """
     Plots SHAP values from a dictionary of values
     :param shap_dict: dictionary output from the SHAP function
@@ -97,8 +129,11 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
     :param title: title of plot
     """
     plt.figure(figsize=figsize)
-    shap.summary_plot(shap_dict, feature_names=col_list, show=False,
-                      plot_type=plot_type, max_display=n_features)
+    if order == True:
+        shap.plots.bar(shap_dict, show=False, max_display=n_features, order=variable_order)
+    else:
+        shap.summary_plot(shap_dict, feature_names=col_list, show=False,
+                          plot_type=plot_type, max_display=n_features)
     plt.title(title)
     plt.tick_params(axis='y', labelsize=label_size)
     plt.tight_layout()
