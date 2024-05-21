@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
-font_size = 16
-label_size = 20
+# font_size = 16
+# label_size = 20
+font_size = 12
+label_size = 14
+figsize = (2.7, 1.5)
 
 def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     """
@@ -57,7 +60,7 @@ def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
     return
 
 
-def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', 'X2', 'X1'], figsize=(8, 3.5)):
+def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', 'X2', 'X1'], figsize=figsize):
     """
     Plots ordered SHAP importance from dataframe
     :param shap_values: dataframe of importance values with a "Feature" and "Importance" column
@@ -72,7 +75,8 @@ def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', '
     plt.barh(shap_values["Feature"], shap_values["Importance"], color="dodgerblue", )
     ax.set_yticklabels(shap_values["Feature"])
     ax.set_title(" ")
-    ax.set_xlabel('Importance', fontsize=font_size)
+    ax.set_xlim(0, 2.5)
+    ax.set_xlabel('', fontsize=font_size)
     ax.tick_params(axis='y', labelsize=label_size)
     fig.tight_layout()
     plt.savefig(save_path + save_name + ".png")
@@ -82,7 +86,7 @@ def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', '
     return
 
 
-def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3.5),
+def plot_multiple_permutations(result, save_name, save_path, vars, figsize= figsize,
                                order=False, title= 'Permutation Importances (test set)',
                                variable_order=['X3', 'X2', 'X1']):
     """
@@ -95,11 +99,12 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3
     :return:
     """
     sorted_indices = result.importances_mean.argsort()
-    if order:
+    fig, ax = plt.subplots(figsize=figsize)
+    if order == True:
         # Filter out variables present in data and sort them according to the order
         sorted_indices = [vars.index(var) for var in variable_order if var in vars]
+        ax.set_xlim(0, 1.5)
 
-    fig, ax = plt.subplots(figsize=figsize)
     plt.barh(range(len(sorted_indices)), result.importances_mean[sorted_indices],
              xerr=result.importances_std[sorted_indices], color="dodgerblue")
     plt.yticks(range(len(sorted_indices)), np.array(vars)[sorted_indices])
@@ -116,7 +121,7 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize=(8, 3
 
 
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
-              save_path, save_name, title="", figsize=(8, 3.5),
+              save_path, save_name, title="", figsize= figsize,
                      order=False, variable_order=['X3', 'X2', 'X1', 'const']):
     """
     Plots SHAP values from a dictionary of values
@@ -132,6 +137,8 @@ def plot_SHAP(shap_dict, col_list, plot_type, n_features,
     plt.figure(figsize=figsize)
     if order == True:
         shap.plots.bar(shap_dict, show=False, max_display=n_features, order=variable_order)
+        ax = plt.gca()
+        ax.set_xlim(0, 2.5)
     else:
         shap.summary_plot(shap_dict, feature_names=col_list, show=False,
                           plot_type=plot_type, max_display=n_features)
@@ -191,7 +198,8 @@ def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", 
 
 
 
-def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5)):
+def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
+             save_name=None):
     """
     :param pred_model: string containing name of prediction model
     :param model: the specified model
@@ -200,11 +208,14 @@ def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5)):
     :param save_path: file path where plot should be saved
     :return:
     """
+    if save_name is None:
+        save_name = '{}_ice.png'.format(pred_model)
+
     fig, ax = plt.subplots(figsize=figsize)
     g = PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind='both')
     g.plot()
     plt.tight_layout()
-    plt.savefig(save_path + '{}_ice.png'.format(pred_model), bbox_inches='tight')
+    plt.savefig(save_path + save_name, bbox_inches='tight')
     return
 
 

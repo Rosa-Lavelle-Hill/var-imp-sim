@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
     check_corr, print_tree, plot_multiple_permutations, plot_SHAP_ordered
-from Functions.pred import define_model
+from Functions.pred import define_model, define_model_confounder
 from PyALE import ale
 
 # =================================
@@ -23,7 +23,7 @@ from PyALE import ale
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_models = ["lasso", "enet", "rf", "tree"] # string defining the prediction model to use (see above for alternatives)
+pred_models = ["rf", "lasso", "enet", "tree"] # string defining the prediction model to use (see above for alternatives)
 n_samples = 1000 # number of samples in generated data
 test_size = 0.5 # ratio of training:test data
 cv = 5 # number of cross-validation splits
@@ -33,6 +33,7 @@ explain_data_instance_num = 0 # the row index indicating which instance in the d
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
 results_path = "Results confounder-sim/Interpretation/"
+force_max_features_1 = True
 # -------------------------- Run Simulations --------------------------
 
 if __name__ == '__main__':
@@ -83,8 +84,17 @@ if __name__ == '__main__':
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=seed, test_size=test_size, shuffle=True)
 
         # Define model
-        model, param_grid = define_model(pred_model=pred_model, fixed_seed=seed)
+        model, param_grid = define_model_confounder(pred_model=pred_model, fixed_seed=seed)
 
+        if force_max_features_1 == True:
+            if (pred_model == "tree") or (pred_model == "rf"):
+                param_grid["max_features"] = [None]
+                mf = "_mf1"
+            else:
+                mf = ""
+        else:
+            mf = ""
+        print(param_grid)
         # Perform CV on train data to tune model hyper-parameters
         grid_search = GridSearchCV(estimator=model,
                                    param_grid=param_grid,
@@ -121,13 +131,13 @@ if __name__ == '__main__':
         perm_imp_df = pd.DataFrame(dict)
         # flip so most important at top on graph
         perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
-        plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation")
+        plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation{mf}")
 
         # b) multiple permutations (plot with variance bars)
         result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
                                         random_state=seed, n_jobs=2, scoring=scoring)
         plot_multiple_permutations(result=result, vars=vars, save_path=save_path, order=True,
-                                   save_name=f"{pred_model}_permutation_with_bars.png", title="")
+                                   save_name=f"{pred_model}_permutation_with_bars{mf}.png", title="")
 
         ## 2) Tree-based impurity importance
         if (pred_model == 'rf') or (pred_model == "tree"):
@@ -143,7 +153,7 @@ if __name__ == '__main__':
             # plot
             plot_impurity(impurity_imp_df=impurity_imp_df,
                           save_path=save_path,
-                          save_name=f"{pred_model}_impurity")
+                          save_name=f"{pred_model}_impurity{mf}")
 
         ## 3) SHAP importance
         save_path = results_path + "SHAP/"
@@ -180,11 +190,11 @@ if __name__ == '__main__':
         for method, shap_dict in shap_results_dict.items():
             plot_SHAP_ordered(shap_dict,
                       save_path= save_path,
-                      save_name=f"{pred_model}_shap_ORDERED_{method}")
+                      save_name=f"{pred_model}_shap_ORDERED_{method}{mf}")
 
         # b) Example of SHAP local force plot for data instance i:
         plot_SHAP_force(i=explain_data_instance_num, X_test=pd.DataFrame(X_test, columns=vars), model=model,
-                        save_path=save_path, save_name=f"{pred_model}_shap_local", pred_model=pred_model,
+                        save_path=save_path, save_name=f"{pred_model}_shap_local{mf}", pred_model=pred_model,
                         title="local explanation")
 
         ## 4) Partial Dependence Plot (PDP)
@@ -195,21 +205,24 @@ if __name__ == '__main__':
         features = [f1, (f1, f2)]
         save_path= results_path + "PDP/"
         X_test = pd.DataFrame(X_test, columns=vars)
-        plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
+        plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test,
+                 features=features, save_name=f"pdp{mf}")
 
         ## 5) Individual Conditional Expectation (ICE) plot
         save_path= results_path + "ICE/"
-        plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
+        save_name = f"{pred_model}_ice{mf}.png"
+        plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test,
+                 feature=f1, save_name=save_name)
 
         ## 6) Accumulated Local Effects (ALE) graph
         save_path = results_path + "ALE/"
         grid = 50
         # a) one variable:
         ale_eff = ale(X=X_test, model=model, feature=[f1], grid_size=grid, include_CI=False)
-        plt.savefig(save_path + f"{pred_model}_1D_ale.png")
+        plt.savefig(save_path + f"{pred_model}_1D_ale{mf}.png")
         # b) two variables:
         ale_eff_2D = ale(X=X_test, model=model, feature=[f1, f2], grid_size=grid)
-        plt.savefig(save_path + f"{pred_model}_2D_ale.png")
+        plt.savefig(save_path + f"{pred_model}_2D_ale{mf}.png")
 
         ## 7) Local Interpretable Model-agnostic Explanations (LIME)
         save_path = results_path + "LIME/"
@@ -221,14 +234,14 @@ if __name__ == '__main__':
         # Create a plot from the explanation
         fig = exp.as_pyplot_figure()
         plt.tight_layout()
-        plt.savefig(save_path + f'{pred_model}_lime.png')
+        plt.savefig(save_path + f'{pred_model}_lime{mf}.png')
 
         ## 8) Print decision tree structure (here, for visual purposes only)
         if (pred_model == 'rf') or (pred_model == "tree"):
             save_path = results_path + "Tree/"
             # pre-define depth parameter (as tree is for visual purposes only)
             print_tree(X_test=X_test, y_test=y_test, max_depth=3, feature_names=vars,
-                       fontsize=8, save_path=save_path, save_name="example_dt_structure")
+                       fontsize=8, save_path=save_path, save_name=f"example_dt_structure{mf}")
 
     run_time = dt.datetime.now() - start_time
     print(f'Finished! Run time: {run_time}')
