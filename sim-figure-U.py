@@ -212,6 +212,14 @@ for pred_model in ["rf"]:
                     save_path=save_path, save_name=f"{pred_model}_shap_local_{shap_method}", pred_model=pred_model,
                     title="local explanation")
 
+    # c) Plot SHAP value against feature value:
+    plt.scatter(X_test.X6, shap_values_df.X6, alpha=0.5)
+    plt.xlabel('X6', fontsize=20)
+    plt.ylabel('SHAP values', fontsize=20)
+    plt.title('')
+    plt.savefig(save_path + f"{pred_model}_U-plot_{shap_method}.png")
+    plt.close()
+
     ## 4) Partial Dependence Plot (PDP)
     # select features to plot automatically based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)

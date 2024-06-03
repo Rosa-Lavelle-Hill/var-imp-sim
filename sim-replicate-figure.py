@@ -135,7 +135,7 @@ for pred_model in ["rf"]:
     # b) multiple permutations (plot with variance bars)
     result = permutation_importance(model, X_test, y_test, n_repeats=permutations,
                                     random_state=seed, n_jobs=2, scoring=scoring)
-    plot_multiple_permutations(result=result, vars=vars, save_path=save_path,
+    plot_multiple_permutations(result=result, vars=vars, save_path=save_path, figsize=(8, 3.5),
                                save_name=f"{pred_model}_permutation_with_bars.png")
 
     ## 2) Tree-based impurity importance
@@ -238,9 +238,13 @@ for pred_model in ["rf"]:
     ## 8) Print decision tree structure (here, for visual purposes only)
     if (pred_model == 'rf') or (pred_model == "tree"):
         save_path = results_path + "Tree/"
-        # pre-define depth parameter (as tree is for visual purposes only)
-        print_tree(X_test=X_test, y_test=y_test, max_depth=3, feature_names=vars,
-                   fontsize=8, save_path=save_path, save_name="example_dt_structure")
+        # pre-define max_depth parameter (as tree is for visual purposes only)
+        print_tree(X_test=X_test, y_test=y_test, max_depth=1, feature_names=vars, figsize=(5, 3),
+                   fontsize=8, save_path=save_path, save_name="example_dt_structure_small")
+        print_tree(X_test=X_test, y_test=y_test, max_depth=2, feature_names=vars, figsize=(4.1, 2),
+                   fontsize=8, save_path=save_path, save_name="example_dt_structure_medium")
+        print_tree(X_test=X_test, y_test=y_test, max_depth=3, feature_names=vars, figsize=(7, 4), impurity=True,
+                   fontsize=8, save_path=save_path, save_name="example_dt_structure_large", min_samples_leaf=50)
 
     run_time = dt.datetime.now() - start_time
     print(f'{pred_model} finished! Run time: {run_time}')

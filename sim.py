@@ -244,7 +244,7 @@ if __name__ == '__main__':
     if (pred_model == 'rf') or (pred_model == "tree"):
         save_path = results_path + "Tree/"
         # pre-define depth parameter (as tree is for visual purposes only)
-        print_tree(X_test=X_test, y_test=y_test, max_depth=3, feature_names=vars,
+        print_tree(X_test=X_test, y_test=y_test, max_depth=2, feature_names=vars, figsize=(4, 3),
                    fontsize=8, save_path=save_path, save_name="example_dt_structure")
 
     run_time = dt.datetime.now() - start_time

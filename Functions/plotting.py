@@ -259,7 +259,7 @@ def plot_SHAP_force(i, X_test, model, save_path, save_name,
 
 
 def print_tree(max_depth, X_test, y_test, feature_names, save_name, save_path,
-               fontsize=8, figsize=(10, 4)):
+               fontsize=8, figsize=(5, 2), impurity=False, label='all', min_samples_leaf=1):
     """
     :param max_depth: integer to control the number of tree levels
     :param X_test: dataframe of predictor variables
@@ -273,7 +273,7 @@ def print_tree(max_depth, X_test, y_test, feature_names, save_name, save_path,
     """
     # define a decision tree for visual puposes only
     from sklearn import tree
-    dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth)
+    dec_tree = tree.DecisionTreeRegressor(max_depth=max_depth, min_samples_leaf=min_samples_leaf)
     # fit tree
     dec_tree.fit(X_test, y_test)
     fig = plt.figure(figsize=figsize)
@@ -283,6 +283,8 @@ def print_tree(max_depth, X_test, y_test, feature_names, save_name, save_path,
                        fontsize=fontsize,
                        precision=1,
                        rounded=True,
-                       class_names=True)
+                       label=label,
+                       impurity=impurity,
+                       class_names=False)
     plt.tight_layout()
     plt.savefig(save_path + save_name + ".png")
