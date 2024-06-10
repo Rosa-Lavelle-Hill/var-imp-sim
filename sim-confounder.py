@@ -33,7 +33,7 @@ explain_data_instance_num = 0 # the row index indicating which instance in the d
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
 results_path = "Results confounder-sim/Interpretation/"
-force_max_features_1 = True
+force_max_features_all = True
 # -------------------------- Run Simulations --------------------------
 
 if __name__ == '__main__':
@@ -86,9 +86,9 @@ if __name__ == '__main__':
         # Define model
         model, param_grid = define_model_confounder(pred_model=pred_model, fixed_seed=seed)
 
-        if force_max_features_1 == True:
+        if force_max_features_all == True:
             if (pred_model == "tree") or (pred_model == "rf"):
-                param_grid["max_features"] = [None]
+                param_grid["max_features"] = [3]
                 mf = "_mf1"
             else:
                 mf = ""
