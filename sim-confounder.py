@@ -23,7 +23,7 @@ from PyALE import ale
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_models = ["rf", "lasso", "enet", "tree"] # string defining the prediction model to use (see above for alternatives)
+pred_models = ['rf'] # ["rf", "lasso", "enet", "tree"] # string defining the prediction model to use (see above for alternatives)
 n_samples = 1000 # number of samples in generated data
 test_size = 0.5 # ratio of training:test data
 cv = 5 # number of cross-validation splits
