@@ -7,7 +7,7 @@ import shap as shap
 import datetime as dt
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from sklearn.inspection import permutation_importance
+from sklearn.inspection import permutation_importance, PartialDependenceDisplay
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
@@ -238,6 +238,14 @@ for pred_model in ["rf"]:
     ## 5) Individual Conditional Expectation (ICE) plot
     save_path= results_path + "ICE/"
     plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
+
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    PartialDependenceDisplay.from_estimator(model, X_test, ['X6'], kind='both',
+                                            pd_line_kw={"color":"red", "linestyle":'dashed', "linewidth":3})
+    ax.set_ylabel('PD', fontsize=20)
+    ax.set_xlabel('X6', fontsize=20)
+    plt.tight_layout()
+    plt.savefig(save_path + "rf_ice_X6_col.png", bbox_inches='tight')
 
     ## 6) Accumulated Local Effects (ALE) graph
     save_path = results_path + "ALE/"
