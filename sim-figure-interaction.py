@@ -7,7 +7,7 @@ import shap as shap
 import datetime as dt
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from sklearn.inspection import permutation_importance
+from sklearn.inspection import permutation_importance, PartialDependenceDisplay
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
@@ -20,7 +20,7 @@ from PyALE import ale
 # =================================
 
 n_samples = 1000 # number of samples in generated data
-n_features = 5 # number of features (or "independent variables") in generated data
+n_features = 2 # number of features (or "independent variables") in generated data
 mean = 0 # mean of generated data
 sd = 1 # standard deviation of generated data
 iv_cor = 0.6 # the Pearson r correlation of the features with one another in the generated data
@@ -33,8 +33,8 @@ shap_method = "interventional" # "interventional" = true to model; "correlation_
 explain_data_instance_num = 0 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
-results_path = "Results figure-U/Interpretation/"
-outputs_path = "Outputs figure-U/"
+results_path = "Results figure-interaction/Interpretation/"
+outputs_path = "Outputs figure-interaction/"
 replicate_figure_model = True
 # -------------------------- Run Simulations --------------------------
 
@@ -54,43 +54,62 @@ for pred_model in ["rf"]:
 
     # Generate X
     np.random.seed(seed)
-    X = np.random.multivariate_normal(mean=means, cov=corr_matrix, size=n_samples)
 
-    # Predict y from X with fixed coefficients (b=1)
-    y_pred = np.dot(X, np.ones((X.shape[1],)))
+    # Generate feature1 and feature2
+    X1 = np.random.randn(n_samples)
+    X2 = np.random.randn(n_samples)
 
-    # Add noise to y_pred so that X predicts y with a given r2
-    y, iters_count = add_noise(y_pred, dv_r2)
+    # Generate interaction term
+    interaction = X1 * X2
 
-    def quadratic_function(x, a, b, c):
-        return a * (x - b) ** 2 + c
+    # Define the target variable y with some noise
+    noise = np.random.randn(n_samples) * 0.1
 
-    # Define parameters for the quadratic function
-    a = 1  # Determines the width of the U-shape
-    b = 0  # Determines the position of the vertex of the U-shape
-    c = 2  # Determines the vertical shift of the U-shape
+    # # classic interaction
+    # y = 5 * interaction + noise
 
-    # Calculate corresponding X values
-    X_values = quadratic_function(y, a, b, c)
+    # quadratic relationship
+    y = (X1 ** 2) * (1 + 0.5 * X2) + noise
 
-    # Convert the list of x values to a NumPy array
-    X6 = np.array(X_values)
-    plt.scatter(X6, y, alpha=0.5)
-    plt.xlabel('X6', fontsize=20)
-    plt.ylabel('Y', fontsize=20)
+    # Create a DataFrame
+    data = pd.DataFrame({
+        'X1': X1,
+        'X2': X2,
+        'y': y
+    })
+
+    plt.scatter(X1, y, alpha=0.5, )
+    plt.xlabel('X1', fontsize=20)
+    plt.ylabel('y', fontsize=20)
     plt.title('')
-    plt.savefig(outputs_path + "U-plot.png")
+    plt.savefig(outputs_path + "int-plot-X1.png")
     plt.close()
 
+    plt.scatter(X2, y, alpha=0.5)
+    plt.xlabel('X2', fontsize=20)
+    plt.ylabel('y', fontsize=20)
+    plt.title('')
+    plt.savefig(outputs_path + "int-plot-X2.png")
+    plt.close()
+
+    # Plot the data to visualize the interaction
+    plt.scatter(X2, y, alpha=0.3, label='X2 vs y', color='r')
+    plt.scatter(X1, y, alpha=0.5, label='X1 vs y')
+    plt.xlabel('Feature Value',fontsize=20)
+    plt.ylabel('y', fontsize=20)
+    plt.legend()
+    plt.title('')
+    plt.savefig(outputs_path + "int-plot-all.png")
+    plt.close()
+    plt.show()
+
+    X = data.drop('y', axis=1)
     X_feature_names = []
     for i in list(range(1, X.shape[1] + 1)):
         n = f"X{i}"
         X_feature_names.append(n)
 
     # Change to dataframes
-    X = pd.DataFrame(X, columns=X_feature_names)
-    X['X6'] = X6
-    n_features = n_features + 1
     X_feature_names = list(X.columns)
     y = pd.Series(y, name="y")
 
@@ -213,17 +232,32 @@ for pred_model in ["rf"]:
                     title="local explanation")
 
     # c) Plot SHAP value against feature value:
-    plt.scatter(X_test.X6, shap_values_df.X6, alpha=0.5)
-    plt.xlabel('X6', fontsize=20)
+    plt.scatter(X_test.X1, shap_values_df.X1, alpha=0.5)
+    plt.xlabel('X1', fontsize=20)
     plt.ylabel('SHAP values', fontsize=20)
     plt.title('')
-    plt.savefig(save_path + f"{pred_model}_U-plot_{shap_method}.png")
+    plt.savefig(save_path + f"{pred_model}_U-plot_{shap_method}_X1.png")
+    plt.close()
+
+    plt.scatter(X_test.X2, shap_values_df.X2, alpha=0.5, color="r")
+    plt.xlabel('X2', fontsize=20)
+    plt.ylabel('SHAP values', fontsize=20)
+    plt.title('')
+    plt.savefig(save_path + f"{pred_model}_U-plot_{shap_method}_X2.png")
+    plt.close()
+
+    plt.scatter(X_test.X2, shap_values_df.X2, alpha=0.5, color="r")
+    plt.scatter(X_test.X1, shap_values_df.X1, alpha=0.5)
+    plt.xlabel('Feature Value', fontsize=20)
+    plt.ylabel('SHAP values', fontsize=20)
+    plt.title('')
+    plt.savefig(save_path + f"{pred_model}_U-plot_{shap_method}_both.png")
     plt.close()
 
     ## 4) Partial Dependence Plot (PDP)
     # select features to plot automatically based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
-    f1="X6"
+    f1="X1"
     f2="X2"
     # first 2D, then 3D plot (on same figure):
     features = [f1, (f1, f2)]
@@ -233,11 +267,26 @@ for pred_model in ["rf"]:
     # just 2D:
     features = [f1]
     plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features,
-             save_name="pdp_2D", ylim=(-11, 11))
+             save_name="pdp_2D_X1")
+    features = [f2]
+    plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features,
+             save_name="pdp_2D_X2")
 
     ## 5) Individual Conditional Expectation (ICE) plot
     save_path= results_path + "ICE/"
-    plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1)
+    plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f1,
+             save_name="rf_ice_X1.png", kind="individual")
+    plot_ICE(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, feature=f2,
+             save_name="rf_ice_X2.png", kind="individual")
+
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    # PartialDependenceDisplay.from_estimator(model, X_test, ['X1'], kind='individual')
+    PartialDependenceDisplay.from_estimator(model, X_test, ['X2'], kind='individual', line_kw={"color":"red"})
+    ax.set_ylabel('PD', fontsize=20)
+    ax.set_xlabel('X2', fontsize=20)
+    plt.tight_layout()
+    plt.savefig(save_path + "rf_ice_X2_red.png", bbox_inches='tight')
+
 
     ## 6) Accumulated Local Effects (ALE) graph
     save_path = results_path + "ALE/"

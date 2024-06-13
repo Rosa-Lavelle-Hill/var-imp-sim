@@ -1,0 +1,3 @@
+Coefficient values:
+X1 = 0.04
+X2 = 0.43

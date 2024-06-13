@@ -175,7 +175,8 @@ def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
 
 
 
-def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", figsize=(8, 3.5)):
+def plot_PDP(pred_model, model, X_test, features, save_path,
+             save_name = "pdp", figsize=(8, 3.5), ylim=None):
     """
     Plots two a partial dependence plots with either one or two variables depending on the list of features
     :param pred_model: string containing name of prediction model
@@ -192,6 +193,8 @@ def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", 
     if len(features) == 1:
         ax.set_ylabel('PD', fontsize=label_size)
         ax.set_xlabel(features[0], fontsize=label_size)
+    if ylim is not None:
+        ax.set_ylim(ylim)
     plt.tight_layout()
     plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
     return
@@ -199,7 +202,7 @@ def plot_PDP(pred_model, model, X_test, features, save_path, save_name = "pdp", 
 
 
 def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
-             save_name=None):
+             save_name=None, kind="both"):
     """
     :param pred_model: string containing name of prediction model
     :param model: the specified model
@@ -212,7 +215,7 @@ def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
         save_name = '{}_ice.png'.format(pred_model)
 
     fig, ax = plt.subplots(figsize=figsize)
-    g = PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind='both')
+    g = PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind=kind)
     g.plot()
     plt.tight_layout()
     plt.savefig(save_path + save_name, bbox_inches='tight')

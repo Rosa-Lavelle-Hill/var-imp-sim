@@ -28,7 +28,7 @@ lasso_param_grid = {"tol": [0.001],
 #                  "max_depth": [5, 10, 20],
 #                  "max_features": [0.3]}
 
-rf_param_grid = {"min_samples_split": [2, 4, 6],
+rf_param_grid = {"min_samples_split": [6],
                  "max_leaf_nodes": [20, 30, 40],
                  "min_samples_leaf": [1, 2, 3, 4, 5],
                  "n_estimators": [100, 200, 300],
