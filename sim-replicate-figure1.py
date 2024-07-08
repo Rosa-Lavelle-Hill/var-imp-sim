@@ -33,8 +33,8 @@ shap_method = "interventional" # "interventional" = true to model; "correlation_
 explain_data_instance_num = 0 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
-results_path = "Results replicate-figure/Interpretation/"
-outputs_path = "Outputs replicate-figure/"
+results_path = "Results replicate-figure1/Interpretation/"
+outputs_path = "Outputs replicate-figure1/"
 replicate_figure_model = True
 # -------------------------- Run Simulations --------------------------
 
@@ -192,7 +192,7 @@ for pred_model in ["rf"]:
                         title="local explanation")
 
     ## 4) Partial Dependence Plot (PDP)
-    # select features to plot automatically based on permutation importance (most important)
+    # select most important features to plot automatically based on permutation importance (most important)
     perm_imp_df.sort_values(by="Importance", ascending=False, inplace=True, axis=0)
     f1=perm_imp_df['Feature'].iloc[0] # to specify a feature, substitute for: f1='feature_name'
     f2=perm_imp_df['Feature'].iloc[1]

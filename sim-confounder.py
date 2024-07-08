@@ -131,7 +131,8 @@ if __name__ == '__main__':
         perm_imp_df = pd.DataFrame(dict)
         # flip so most important at top on graph
         perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
-        plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation{mf}")
+        plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation{mf}",
+                         result=result, title="", vars=vars, xlab='')
 
         # b) multiple permutations (plot with variance bars)
         result = permutation_importance(model, X_test, y_test, n_repeats=permutations,

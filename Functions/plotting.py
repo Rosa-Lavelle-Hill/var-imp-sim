@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.inspection import PartialDependenceDisplay
 
-# font_size = 16
-# label_size = 20
+# default size params (global)
 font_size = 12
 label_size = 14
 figsize = (2.7, 1.5)
@@ -35,48 +34,37 @@ def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     return
 
 
-
-def plot_permutation(perm_imp_df, save_path, save_name, figsize=(8, 3.5)):
+def plot_permutation(perm_imp_df, save_path, save_name, vars, figsize= figsize,
+                     title= 'Permutation Importances (test set)', xlab= 'Importance',
+                     order=True, variable_order=['X3', 'X2', 'X1'], result=None):
     """
-    Plots permutation importance from dataframe
+    Plots permutation importance from dataframe or 'result'
+    :param result: output from sklearn's permutation importance calculation
     :param perm_imp_df: dataframe of importance values with a "Feature" and "Importance" column
     :param save_path: path where plot should be saved
     :param save_name: name of plot to be saved
     :param figsize: size of figure as a tuple
-    """
-    y_ticks = np.arange(0, perm_imp_df.shape[0])
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.barh(y_ticks, perm_imp_df["Importance"], color="dodgerblue")
-    ax.set_yticks(y_ticks)
-    ax.set_yticklabels(perm_imp_df["Feature"])
-    ax.set_title("Permutation Importance (test set)")
-    ax.set_xlabel('Importance', fontsize=font_size)
-    ax.tick_params(axis='y', labelsize=label_size)
-    fig.tight_layout()
-    plt.savefig(save_path + save_name + ".png")
-    plt.clf()
-    plt.cla()
-    plt.close()
-    return
+    :param vars: list of variable names
+    :param order: if True, variables will be ordered as stated in list variable_order
 
-
-def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', 'X2', 'X1'], figsize=figsize):
     """
-    Plots ordered SHAP importance from dataframe
-    :param shap_values: dataframe of importance values with a "Feature" and "Importance" column
-    :param save_path: path where plot should be saved
-    :param save_name: name of plot to be saved
-    :param figsize: size of figure as a tuple
-    """
-    shap_values["Feature"] = pd.Categorical(shap_values["Feature"], categories=variable_order, ordered=True)
-    # Sort the DataFrame based on the categorical order
-    shap_values = shap_values.sort_values("Feature")
     fig, ax = plt.subplots(figsize=figsize)
-    plt.barh(shap_values["Feature"], shap_values["Importance"], color="dodgerblue", )
-    ax.set_yticklabels(shap_values["Feature"])
-    ax.set_title(" ")
-    ax.set_xlim(0, 2.5)
-    ax.set_xlabel('', fontsize=font_size)
+    if result:
+        sorted_indices = result.importances_mean.argsort()
+        if order == True:
+            # Filter out variables present in data and sort them according to the order
+            sorted_indices = [vars.index(var) for var in variable_order if var in vars]
+            ax.set_xlim(0, 1.5)
+            plt.barh(range(len(sorted_indices)), result.importances_mean[sorted_indices],
+                     xerr=result.importances_std[sorted_indices], color="dodgerblue")
+            plt.yticks(range(len(sorted_indices)), np.array(vars)[sorted_indices])
+    else:
+        y_ticks = np.arange(0, perm_imp_df.shape[0])
+        ax.barh(y_ticks, perm_imp_df["Importance"], color="dodgerblue")
+        ax.set_yticks(y_ticks)
+        ax.set_yticklabels(perm_imp_df["Feature"])
+    ax.set_title(title)
+    ax.set_xlabel(xlabel=xlab, fontsize=font_size)
     ax.tick_params(axis='y', labelsize=label_size)
     fig.tight_layout()
     plt.savefig(save_path + save_name + ".png")
@@ -118,6 +106,31 @@ def plot_multiple_permutations(result, save_name, save_path, vars, figsize= figs
     plt.close()
     return
 
+
+def plot_SHAP_ordered(shap_values, save_path, save_name, variable_order=['X3', 'X2', 'X1'], figsize=figsize):
+    """
+    Plots ordered SHAP importance from dataframe
+    :param shap_values: dataframe of importance values with a "Feature" and "Importance" column
+    :param save_path: path where plot should be saved
+    :param save_name: name of plot to be saved
+    :param figsize: size of figure as a tuple
+    """
+    shap_values["Feature"] = pd.Categorical(shap_values["Feature"], categories=variable_order, ordered=True)
+    # Sort the DataFrame based on the categorical order
+    shap_values = shap_values.sort_values("Feature")
+    fig, ax = plt.subplots(figsize=figsize)
+    plt.barh(shap_values["Feature"], shap_values["Importance"], color="dodgerblue", )
+    ax.set_yticklabels(shap_values["Feature"])
+    ax.set_title(" ")
+    ax.set_xlim(0, 2.5)
+    ax.set_xlabel('', fontsize=font_size)
+    ax.tick_params(axis='y', labelsize=label_size)
+    fig.tight_layout()
+    plt.savefig(save_path + save_name + ".png")
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return
 
 
 def plot_SHAP(shap_dict, col_list, plot_type, n_features,
@@ -202,8 +215,9 @@ def plot_PDP(pred_model, model, X_test, features, save_path,
 
 
 def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
-             save_name=None, kind="both"):
+             save_name=None, kind="both", pd_line_kws = None):
     """
+    :param pd_line_kws: parameters to control the style and colour of the PD line
     :param pred_model: string containing name of prediction model
     :param model: the specified model
     :param X_test: dataframe of data to be explained
@@ -211,12 +225,14 @@ def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
     :param save_path: file path where plot should be saved
     :return:
     """
+    if pd_line_kws is None:
+        pd_line_kws = {"color": "red", "linestyle": 'dashed', "linewidth": 3}
     if save_name is None:
         save_name = '{}_ice.png'.format(pred_model)
 
     fig, ax = plt.subplots(figsize=figsize)
-    g = PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind=kind)
-    g.plot()
+    PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind=kind,
+                                                pd_line_kw=pd_line_kws)
     plt.tight_layout()
     plt.savefig(save_path + save_name, bbox_inches='tight')
     return
