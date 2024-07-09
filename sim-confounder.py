@@ -32,7 +32,7 @@ permutations = 10 # number of permutations in permutation importance calculation
 explain_data_instance_num = 0 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
-results_path = "Results confounder-sim/Interpretation/"
+results_path = "Results confounder/Interpretation/"
 force_max_features_all = True
 # -------------------------- Run Simulations --------------------------
 
@@ -48,7 +48,8 @@ if __name__ == '__main__':
     X3 = np.random.normal(size=n_samples)
 
     # Y is influenced by X1 and X2 but not X3
-    y = 2 * X1 + 3 * X2 + np.random.normal(size=n_samples)
+    error = np.random.normal(size=n_samples)
+    y = 2 * X1 + 3 * X2 + error
 
     # Create a dataframe with these variables
     data = pd.DataFrame({'X1': X1, 'X2': X2, 'X3': X3, 'y': y})

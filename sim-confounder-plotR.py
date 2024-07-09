@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-save_path = "Results confounder-sim/R_plots/"
+save_path = "Results confounder/R_plots/"
 font_size = 12
 label_size = 14
 figsize = (2.7, 1.5)
