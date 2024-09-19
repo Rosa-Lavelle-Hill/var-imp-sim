@@ -214,7 +214,7 @@ def plot_PDP(pred_model, model, X_test, features, save_path,
 
 
 
-def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
+def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5), ylab=None, xlab=None,
              save_name=None, kind="both", pd_line_kws = None):
     """
     :param pd_line_kws: parameters to control the style and colour of the PD line
@@ -233,6 +233,10 @@ def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5),
     fig, ax = plt.subplots(figsize=figsize)
     PartialDependenceDisplay.from_estimator(model, X_test, [feature], kind=kind,
                                                 pd_line_kw=pd_line_kws)
+    if xlab:
+        plt.xlabel(xlab, fontsize=20)
+    if ylab:
+        plt.ylabel(ylab, fontsize=20)
     plt.tight_layout()
     plt.savefig(save_path + save_name, bbox_inches='tight')
     return

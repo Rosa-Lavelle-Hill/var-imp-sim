@@ -1,0 +1,3 @@
+Coefficient values:
+X = -0.01
+Z = 2.31
