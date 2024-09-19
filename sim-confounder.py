@@ -23,7 +23,7 @@ from PyALE import ale
 # supported model classes for pred_model: "enet" for elastic net regression, "lasso" for lasso regression,
 # ..."tree" for a decision tree, and "rf" for a random forest
 
-pred_models = ['rf', 'lasso'] # ["rf", "lasso", "enet", "tree"] # string defining the prediction model to use (see above for alternatives)
+pred_models = ['lasso', 'rf'] # string defining the prediction model to use (see above for alternatives)
 n_samples = 1000 # number of samples in generated data
 test_size = 0.5 # ratio of training:test data
 cv = 5 # number of cross-validation splits
@@ -90,12 +90,13 @@ if __name__ == '__main__':
         if force_max_features_all == True:
             if (pred_model == "tree") or (pred_model == "rf"):
                 param_grid["max_features"] = [3]
-                mf = "_mf1"
+                mf = "_MFall3"
             else:
-                mf = ""
+                mf = "_MFn1"
         else:
             mf = ""
         print(param_grid)
+
         # Perform CV on train data to tune model hyper-parameters
         grid_search = GridSearchCV(estimator=model,
                                    param_grid=param_grid,
@@ -119,6 +120,17 @@ if __name__ == '__main__':
         print(f'Model performance on unseen test data: {test_r2} Prediction R2')
 
         # ------------------------------------------ Explanations ------------------------------------------
+        if pred_model == 'lasso':
+            # print coefficients of trained lasso model
+            coefficients = model.coef_
+
+            # Print each feature with its corresponding coefficient
+            feature_names = X.columns
+            coef_dict = dict(zip(feature_names, coefficients))
+
+            print("Lasso coefficients by feature:")
+            for feature, coef in coef_dict.items():
+                print(f"{feature}: {coef}")
 
         vars = list(X.columns)
 
