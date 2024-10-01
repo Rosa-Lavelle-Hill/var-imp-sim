@@ -1,13 +1,13 @@
 # var-imp-sim
 To accompany the article **"An Explainable AI Handbook for Psychologists: Methods, Opportunities, and Challenges"**
 
-Rosa Lavelle-Hill (University of Copenhagen), Gavin Smith (University of Nottingham), and Kou Murayama (University of Tübingen)
+Rosa Lavelle-Hill (University of Copenhagen), Gavin Smith (University of Nottingham), Hannah Deininger (University of Tübingen), and Kou Murayama (University of Tübingen)
 
 Abstract
 
 With more researchers in psychology using machine learning to model large datasets, many are also looking to eXplainable AI (XAI) to understand how their model works and to gain insights into the most important predictors. However, the methodological approach for explaining a machine learning model is not as straightforward or as well-established as with traditional statistical models. Not only are there a large number of potential XAI methods to choose from, but there are also a number of unresolved challenges when using XAI to understand psychological data. This article aims to provide an introduction to the field of XAI for psychologists. We first introduce explainability from a machine learning perspective. Then we provide an overview of commonly used XAI approaches, namely permutation importance, impurity-based feature importance, Individual Conditional Expectation (ICE) graphs, Partial Dependence Plots (PDP), Accumulated Local Effect (ALE), Local Interpretable Model-agnostic Explanations (LIME), SHapley Additive exPlanations (SHAP), and Deep Learning Important FeaTures (DeepLIFT). Finally, we highlight and discuss some of the practical challenges that psychologists can encounter when using XAI metrics to understand predictor importance. 
 
-![MainFig8thJul](https://github.com/Rosa-Lavelle-Hill/var-imp-sim/assets/51444424/1887e370-f876-472b-90cc-e280e75dd731)
+
 
 The GitHub repository can be downloaded and the code interacted with, in that key parameters (i.e., the mean and SD of the data, the extent of multicollinearity (Pearson r), number of samples (N), number of features, the effect size (R^2), the model class (i.e., tree-based models compared to regression-based models), and the random seed) can be changed, the code re-run, and the effects these parameters have on the XAI outputs can be examined.
 
