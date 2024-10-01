@@ -9,7 +9,7 @@ With more researchers in psychology using machine learning to model large datase
 
 ![Figure 1. A Categorization of XAI Methods](https://github.com/Rosa-Lavelle-Hill/var-imp-sim/blob/master/Fig1_1stOct.png?raw=true)
 
-The GitHub repository can be downloaded and the code interacted with, in that key parameters (i.e., the mean and SD of the data, the extent of multicollinearity (Pearson r), number of samples (N), number of features, the effect size (R^2), the model class (i.e., tree-based models compared to regression-based models), and the random seed) can be changed, the code re-run, and the effects these parameters have on the XAI outputs can be examined.
+This GitHub repository can be downloaded and the code interacted with, in that key parameters (i.e., the mean and SD of the data, the extent of multicollinearity (Pearson r), number of samples (N), number of features, the effect size (R^2), the model class (i.e., tree-based models compared to regression-based models), and the random seed) can be changed, the code re-run, and the effects these parameters have on the XAI outputs can be examined.
 
 The main script is **sim.py**, where researchers can change key parameters mentioned above (e.g., the prediction model, size of data, multicollinearity, effect size) and run the code to see how the XAI outputs change.
 
