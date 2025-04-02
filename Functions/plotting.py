@@ -3,7 +3,7 @@ import shap
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.inspection import PartialDependenceDisplay, partial_dependence
+from sklearn.inspection import PartialDependenceDisplay, partial_dependence, plot_partial_dependence
 
 # default size params (global)
 font_size = 12
@@ -212,29 +212,26 @@ def plot_PDP_orig(pred_model, model, X_test, features, save_path,
     plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
     return
 
-
 def plot_PDP(pred_model, model, X_test, features, save_path,
              save_name="pdp", figsize=(4, 3.5), ylim=None, label_size=12):
     """
     Plots a partial dependence plot and overlays a rug plot for data density.
-    :param pred_model: string containing name of prediction model
-    :param model: the specified model
-    :param X_test: dataframe of data to be explained
-    :param features: a list containing either single features or a tuple of two features
-    :param figsize: size of figure as a tuple
-    :param save_path: file path where plot should be saved
     """
+
     fig, ax = plt.subplots(figsize=figsize)
 
     # Plot PDP
-    display = PartialDependenceDisplay.from_estimator(model, X_test, features, ax=ax)
+    display = PartialDependenceDisplay.from_estimator(model, X_test,
+                                                      features, ax=ax)
+    # Hide decile lines
+    if hasattr(display, "deciles_vlines_"):
+        plt.setp(display.deciles_vlines_, visible=False)
 
     # If it's a single feature, overlay a rug plot
     if len(features) == 1:
         feature = features[0]
         ax = display.axes_[0, 0]  # Get the axis used by PDP
 
-        # Add rug plot using seaborn or matplotlib
         sns.rugplot(x=X_test[feature], ax=ax, color='black', alpha=0.2, height=0.025)
 
         ax.set_ylabel('Average Prediction of y', fontsize=label_size)
@@ -246,6 +243,52 @@ def plot_PDP(pred_model, model, X_test, features, save_path,
     plt.tight_layout()
     plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
     return
+# def plot_PDP(pred_model, model, X_test, features, save_path,
+#              save_name="pdp", figsize=(4, 3.5), ylim=None, label_size=12):
+#     """
+#     Plots a partial dependence plot and overlays a rug plot for data density.
+#     :param pred_model: string containing name of prediction model
+#     :param model: the specified model
+#     :param X_test: dataframe of data to be explained
+#     :param features: a list containing either single features or a tuple of two features
+#     :param figsize: size of figure as a tuple
+#     :param save_path: file path where plot should be saved
+#     """
+#     fig, ax = plt.subplots(figsize=figsize)
+#
+#     # Plot PDP
+#     display = PartialDependenceDisplay.from_estimator(model, X_test, features, ax=ax)
+#
+#     # Remove vertical dashed decile lines
+#     for line in ax.lines:
+#         xdata = line.get_xdata()
+#         linestyle = line.get_linestyle()
+#         alpha = line.get_alpha()
+#
+#         if len(xdata) == 2 and xdata[0] == xdata[1]:
+#             if linestyle == '--' and (alpha is None or alpha < 0.7):
+#                 line.remove()
+#
+#     # If it's a single feature, overlay a rug plot
+#     if len(features) == 1:
+#         feature = features[0]
+#         ax = display.axes_[0, 0]  # Get the axis used by PDP
+#
+#         # Add rug plot using seaborn or matplotlib
+#         sns.rugplot(x=X_test[feature], ax=ax, color='black', alpha=0.2, height=0.025)
+#
+#         ax.set_ylabel('Average Prediction of y', fontsize=label_size)
+#         ax.set_xlabel(feature, fontsize=label_size)
+#
+#         if ylim is not None:
+#             ax.set_ylim(ylim)
+#
+#     plt.tight_layout()
+#     plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
+#     plt.clf()
+#     plt.cla()
+#     plt.close()
+#     return
 
 
 def plot_ICE_deciles(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5), ylab=None, xlab=None,
@@ -320,6 +363,9 @@ def plot_ICE(pred_model, model, X_test, feature, save_path,
 
     plt.tight_layout()
     plt.savefig(save_path + save_name, bbox_inches='tight')
+    plt.clf()
+    plt.cla()
+    plt.close()
     return
 
 
@@ -353,7 +399,6 @@ def plot_SHAP_force(i, X_test, model, save_path, save_name,
     plt.title(title)
     plt.tight_layout()
     plt.savefig(save_path + save_name + '.png')
-    plt.close()
     plt.clf()
     plt.cla()
     plt.close()
