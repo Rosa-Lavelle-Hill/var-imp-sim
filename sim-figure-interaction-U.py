@@ -65,9 +65,6 @@ for pred_model in ["rf"]:
     # Define the target variable y with some noise
     noise = np.random.randn(n_samples) * 0.1
 
-    # # classic interaction
-    # y = 5 * interaction + noise
-
     # quadratic relationship
     y = (X1 ** 2) * (1 + 0.5 * X2) + noise
 
@@ -170,9 +167,10 @@ for pred_model in ["rf"]:
     perm_importances_mean = result.importances_mean
     dict = {'Feature': vars, "Importance": perm_importances_mean}
     perm_imp_df = pd.DataFrame(dict)
+
     # flip so most important at top on graph
     perm_imp_df.sort_values(by="Importance", ascending=True, inplace=True, axis=0)
-    plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation")
+    plot_permutation(perm_imp_df=perm_imp_df, save_path=save_path, save_name=f"{pred_model}_permutation", vars=vars)
 
     # b) multiple permutations (plot with variance bars)
     result = permutation_importance(model, X_test, y_test, n_repeats=permutations,

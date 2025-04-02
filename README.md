@@ -11,6 +11,8 @@ With more researchers in psychology using machine learning to model large datase
 
 This GitHub repository can be downloaded and the code interacted with, in that key parameters (i.e., the mean and SD of the data, the extent of multicollinearity (Pearson r), number of samples (N), number of features, the effect size (R^2), the model class (i.e., tree-based models compared to regression-based models), and the random seed) can be changed, the code re-run, and the effects these parameters have on the XAI outputs can be examined.
 
+The code should be ran with **Python 3.7.9** to replicate the results and figures in the paper.
+
 The main script is **sim.py**, where researchers can change key parameters mentioned above (e.g., the prediction model, size of data, multicollinearity, effect size) and run the code to see how the XAI outputs change.
 
 **sim-replicate-figure1.py** was used to create Figure 1.

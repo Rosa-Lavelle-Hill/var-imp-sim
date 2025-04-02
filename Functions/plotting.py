@@ -34,7 +34,7 @@ def plot_impurity(impurity_imp_df, save_path, save_name, figsize=(8, 3.5)):
     return
 
 
-def plot_permutation(perm_imp_df, save_path, save_name, vars, figsize= figsize,
+def plot_permutation(perm_imp_df, save_path, save_name, vars=None, figsize= figsize,
                      title= 'Permutation Importances (test set)', xlab= 'Importance',
                      order=True, variable_order=['X3', 'X2', 'X1'], result=None):
     """
