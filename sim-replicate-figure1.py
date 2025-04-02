@@ -11,7 +11,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split, GridSearchCV
 from Functions.gen_data import add_noise, extract_coef
 from Functions.plotting import plot_impurity, plot_permutation, plot_SHAP, plot_SHAP_force, plot_PDP, plot_ICE, \
-    check_corr, print_tree, plot_multiple_permutations
+    check_corr, print_tree, plot_multiple_permutations, plot_PDP_orig
 from Functions.pred import define_model
 from PyALE import ale
 
@@ -200,8 +200,8 @@ for pred_model in ["rf"]:
     features = [f1, (f1, f2)]
     save_path= results_path + "PDP/"
     X_test = pd.DataFrame(X_test, columns=vars)
-    plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
-    # just 2D:
+    plot_PDP_orig(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features)
+    # just 2D with density of data on X-axis:
     features = [f1]
     plot_PDP(save_path=save_path, pred_model=pred_model, model=model, X_test=X_test, features=features,
              save_name="pdp_2D")

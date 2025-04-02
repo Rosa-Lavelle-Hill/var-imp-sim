@@ -44,12 +44,18 @@ def extract_coef(X, y, X_feature_names, decimal_places,
     # Extract the coefficient values
     coef_list = list(np.round(lr.coef_, decimal_places))
 
-    # Print the coefficient values
-    with open(file_path+file_name, "w") as txt:
+    # Calculate R^2
+    r2_score = round(lr.score(X, y), decimal_places)
+
+    # Print the coefficient values and R^2 to file
+    with open(file_path + file_name, "w") as txt:
         txt.write("Coefficient values:\n")
         for feature_name, coef in zip(X_feature_names, coef_list):
             txt.write(f"{feature_name} = {coef}\n")
-    return
+        txt.write(f"\nR² = {r2_score}\n")
+
+    # Optionally, also print to console
+    print(f"R² for fitted LM model on full data = {r2_score}")
 
 
 def generate_interaction_data(n_points=1000, noise_std=0.5, z_influence=5):

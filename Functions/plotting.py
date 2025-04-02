@@ -3,7 +3,7 @@ import shap
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.inspection import PartialDependenceDisplay
+from sklearn.inspection import PartialDependenceDisplay, partial_dependence
 
 # default size params (global)
 font_size = 12
@@ -74,7 +74,7 @@ def plot_permutation(perm_imp_df, save_path, save_name, vars=None, figsize= figs
     return
 
 
-def plot_multiple_permutations(result, save_name, save_path, vars, figsize= figsize,
+def plot_multiple_permutations(result, save_name, save_path, vars=None, figsize= figsize,
                                order=False, title= 'Permutation Importances (test set)',
                                variable_order=['X3', 'X2', 'X1']):
     """
@@ -188,7 +188,7 @@ def check_corr(X_and_y, save_path, save_name, X_feature_names, decimal_places):
 
 
 
-def plot_PDP(pred_model, model, X_test, features, save_path,
+def plot_PDP_orig(pred_model, model, X_test, features, save_path,
              save_name = "pdp", figsize=(8, 3.5), ylim=None):
     """
     Plots two a partial dependence plots with either one or two variables depending on the list of features
@@ -213,10 +213,45 @@ def plot_PDP(pred_model, model, X_test, features, save_path,
     return
 
 
+def plot_PDP(pred_model, model, X_test, features, save_path,
+             save_name="pdp", figsize=(4, 3.5), ylim=None, label_size=12):
+    """
+    Plots a partial dependence plot and overlays a rug plot for data density.
+    :param pred_model: string containing name of prediction model
+    :param model: the specified model
+    :param X_test: dataframe of data to be explained
+    :param features: a list containing either single features or a tuple of two features
+    :param figsize: size of figure as a tuple
+    :param save_path: file path where plot should be saved
+    """
+    fig, ax = plt.subplots(figsize=figsize)
 
-def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5), ylab=None, xlab=None,
+    # Plot PDP
+    display = PartialDependenceDisplay.from_estimator(model, X_test, features, ax=ax)
+
+    # If it's a single feature, overlay a rug plot
+    if len(features) == 1:
+        feature = features[0]
+        ax = display.axes_[0, 0]  # Get the axis used by PDP
+
+        # Add rug plot using seaborn or matplotlib
+        sns.rugplot(x=X_test[feature], ax=ax, color='black', alpha=0.2, height=0.025)
+
+        ax.set_ylabel('Average Prediction of y', fontsize=label_size)
+        ax.set_xlabel(feature, fontsize=label_size)
+
+        if ylim is not None:
+            ax.set_ylim(ylim)
+
+    plt.tight_layout()
+    plt.savefig(save_path + f'{pred_model}_{save_name}.png', bbox_inches='tight')
+    return
+
+
+def plot_ICE_deciles(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5), ylab=None, xlab=None,
              save_name=None, kind="both", pd_line_kws = None):
     """
+    This plot produces an Plots ICE (Individual Conditional Expectation) with deciles to represent the distribution of the data along the x-axis.
     :param pd_line_kws: parameters to control the style and colour of the PD line
     :param pred_model: string containing name of prediction model
     :param model: the specified model
@@ -241,6 +276,51 @@ def plot_ICE(pred_model, model, X_test, feature, save_path, figsize=(8, 3.5), yl
     plt.savefig(save_path + save_name, bbox_inches='tight')
     return
 
+def plot_ICE(pred_model, model, X_test, feature, save_path,
+                    figsize=(4, 3.5), ylab=None, xlab=None, save_name=None,
+                    pd_line_kws=None, n_grid=50, n_samples=500):
+    """
+    Plots ICE lines and PDP line over a full range of a given feature.
+    """
+    print(f"plotting ICE using {n_samples} samples...")
+    if pd_line_kws is None:
+        pd_line_kws = {"color": "red", "linestyle": 'dashed', "linewidth": 2.5}
+    if save_name is None:
+        save_name = f"{pred_model}_ice.png"
+
+    # Subsample the data to avoid crowding
+    X_sub = X_test.sample(n=min(n_samples, len(X_test)), random_state=42).copy()
+    grid = np.linspace(X_test[feature].min(), X_test[feature].max(), n_grid)
+
+    # Create repeated dataset for predictions
+    ice_curves = []
+    for _, row in X_sub.iterrows():
+        temp = pd.DataFrame([row] * n_grid)
+        temp[feature] = grid
+        preds = model.predict(temp)
+        ice_curves.append(preds)
+
+    ice_curves = np.array(ice_curves)
+    pd_line = ice_curves.mean(axis=0)
+
+    # Plot
+    fig, ax = plt.subplots(figsize=figsize)
+
+    for i in range(ice_curves.shape[0]):
+        ax.plot(grid, ice_curves[i], color='royalblue', alpha=0.1, linewidth=1)
+
+    ax.plot(grid, pd_line, label='Average (PD)', **pd_line_kws)
+
+    # Rug plot to show density
+    sns.rugplot(x=X_test[feature], ax=ax, color='black', alpha=0.2, height=0.025)
+
+    ax.set_xlabel(xlab if xlab else feature, fontsize=14)
+    ax.set_ylabel(ylab if ylab else "Predicted y", fontsize=14)
+    ax.legend()
+
+    plt.tight_layout()
+    plt.savefig(save_path + save_name, bbox_inches='tight')
+    return
 
 
 def plot_SHAP_force(i, X_test, model, save_path, save_name,
