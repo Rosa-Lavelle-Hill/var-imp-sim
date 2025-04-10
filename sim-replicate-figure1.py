@@ -30,7 +30,7 @@ cv = 5 # number of cross-validation splits
 scoring = "r2" # scoring used for both the training and the testing: 'r2' is prediction R-squared, for other options, see: https://scikit-learn.org/stable/modules/model_evaluation.html
 permutations = 10 # number of permutations in permutation importance calculations
 shap_method = "interventional" # "interventional" = true to model; "correlation_dependent" = true to data (for tree-based models "path_dependent") (Lundberg & Lee, 2017; 2020)
-explain_data_instance_num = 0 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
+explain_data_instance_num = 1 # the row index indicating which instance in the data to create a local explanation for (used for SHAP and LIME)
 decimal_places = 2 # integer used for rounding
 seed = 93 # the random seed (used in the data generating process, splitting process, the model fitting process, and the permutation importance calculations)
 results_path = "Results replicate-figure1/Interpretation/"
@@ -185,7 +185,7 @@ for pred_model in ["rf"]:
                       save_name=f"{pred_model}_shap_{plot_type}_{shap_method}.png")
 
     # b) Example of SHAP local force plot for data instance i:
-    instances = [explain_data_instance_num + 1, 230]
+    instances = [explain_data_instance_num, 230]
     for instance in instances:
         plot_SHAP_force(i=instance, X_test=pd.DataFrame(X_test, columns=vars), model=model,
                         save_path=save_path, save_name=f"{pred_model}_shap_local_{shap_method}_xi{instance}", pred_model=pred_model,
@@ -225,7 +225,7 @@ for pred_model in ["rf"]:
     # initilise LIME on train data
     lime_explainer = lime.lime_tabular.LimeTabularExplainer(X_train, feature_names=vars, mode="regression",
                                                             random_state=seed, verbose=False, discretize_continuous=False)
-    # explain 3 different instances to show difference
+    # explain 2 different instances to show difference
     for instance in instances:
         # explain instance of test data
         X_instance = X_test.iloc[instance, :]
